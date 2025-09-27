@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.tomasburgaleta.exampleia.application.service.AudioListenerServiceTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.113 s -- in com.tomasburgaleta.exampleia.application.service.AudioListenerServiceTest
