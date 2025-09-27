@@ -20,6 +20,7 @@
         <mockito.version>5.3.1</mockito.version>
         <azure.cognitiveservices.speech.version>1.32.1</azure.cognitiveservices.speech.version>
         <spring.boot.version>3.1.0</spring.boot.version>
+        <cucumber.version>7.14.0</cucumber.version>
     </properties>
 
     <modules>
@@ -81,6 +82,32 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+            <!-- Cucumber Testing -->
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-java</artifactId>
+                <version>${cucumber.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-junit-platform-engine</artifactId>
+                <version>${cucumber.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-spring</artifactId>
+                <version>${cucumber.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-suite</artifactId>
+                <version>1.9.3</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
