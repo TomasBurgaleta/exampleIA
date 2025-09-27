@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExampleIA - Transcriptor de Audio</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 ExampleIA - Transcriptor de Audio</h1>
+            <p>Sube un archivo WAV y obtén su transcripción usando Azure Speech Services</p>
+        </header>
+
+        <div class="upload-section">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="file-input-wrapper">
+                    <input type="file" id="audioFile" name="file" accept=".wav,audio/wav" required>
+                    <label for="audioFile" class="file-label">
+                        📁 Seleccionar archivo WAV
+                    </label>
+                    <span id="fileName" class="file-name"></span>
+                </div>
+                <button type="submit" class="submit-btn" disabled>
+                    🚀 Transcribir Audio
+                </button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Procesando audio con Azure Speech Services...</p>
+        </div>
+
+        <div id="result" class="result hidden">
+            <h2>📝 Resultado de la Transcripción</h2>
+            <div class="result-content">
+                <div class="info-box">
+                    <strong>ID del objeto:</strong>
+                    <span id="objectId"></span>
+                </div>
+                <div class="info-box">
+                    <strong>Tamaño del audio:</strong>
+                    <span id="audioSize"></span> bytes
+                </div>
+                <div class="transcription-box">
+                    <strong>Texto transcrito:</strong>
+                    <p id="transcribedText"></p>
+                </div>
+                <button id="newTranscription" class="secondary-btn">
+                    🔄 Nueva Transcripción
+                </button>
+            </div>
+        </div>
+
+        <div id="error" class="error hidden">
+            <h2>❌ Error</h2>
+            <p id="errorMessage"></p>
+            <button id="retryBtn" class="secondary-btn">
+                🔄 Intentar de nuevo
+            </button>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
