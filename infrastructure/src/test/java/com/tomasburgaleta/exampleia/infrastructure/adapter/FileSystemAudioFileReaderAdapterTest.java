@@ -29,15 +29,16 @@ class FileSystemAudioFileReaderAdapterTest {
     @Test
     void readWavFile_shouldReturnBytes_whenValidWavFile() throws IOException, AudioFileException {
         // Arrange
-        byte[] validWavHeader = createValidWavHeader();
+        byte[] validWav = createValidWavHeader();
         Path wavFile = tempDir.resolve("test.wav");
-        Files.write(wavFile, validWavHeader);
+        Files.write(wavFile, validWav);
         
         // Act
         byte[] result = adapter.readWavFile(wavFile.toString());
         
-        // Assert
-        assertArrayEquals(validWavHeader, result);
+        // Assert - result should be the PCM data only (8 bytes in our test case)
+        assertNotNull(result);
+        assertEquals(8, result.length);
     }
     
     @Test
@@ -129,36 +130,86 @@ class FileSystemAudioFileReaderAdapterTest {
     }
     
     /**
-     * Creates a minimal valid WAV header for testing
+     * Creates a minimal valid WAV header with PCM data for testing
      */
     private byte[] createValidWavHeader() {
-        byte[] header = new byte[44]; // Standard WAV header size
+        byte[] pcmData = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // 8 bytes of PCM data
+        byte[] wav = new byte[44 + pcmData.length]; // Header + PCM data
         
         // RIFF header
-        header[0] = 'R';
-        header[1] = 'I';
-        header[2] = 'F';
-        header[3] = 'F';
+        wav[0] = 'R';
+        wav[1] = 'I';
+        wav[2] = 'F';
+        wav[3] = 'F';
         
-        // File size (dummy value)
-        header[4] = 0x24; // 36 bytes after this point
-        header[5] = 0x00;
-        header[6] = 0x00;
-        header[7] = 0x00;
+        // File size (36 bytes after this point + PCM data)
+        int fileSize = 36 + pcmData.length;
+        wav[4] = (byte) (fileSize & 0xFF);
+        wav[5] = (byte) ((fileSize >> 8) & 0xFF);
+        wav[6] = (byte) ((fileSize >> 16) & 0xFF);
+        wav[7] = (byte) ((fileSize >> 24) & 0xFF);
         
         // WAVE format
-        header[8] = 'W';
-        header[9] = 'A';
-        header[10] = 'V';
-        header[11] = 'E';
+        wav[8] = 'W';
+        wav[9] = 'A';
+        wav[10] = 'V';
+        wav[11] = 'E';
         
-        // Rest of the header with minimal valid values
         // fmt subchunk
-        header[12] = 'f';
-        header[13] = 'm';
-        header[14] = 't';
-        header[15] = ' ';
+        wav[12] = 'f';
+        wav[13] = 'm';
+        wav[14] = 't';
+        wav[15] = ' ';
         
-        return header;
+        // fmt chunk size (16)
+        wav[16] = 0x10;
+        wav[17] = 0x00;
+        wav[18] = 0x00;
+        wav[19] = 0x00;
+        
+        // Audio format (PCM = 1)
+        wav[20] = 0x01;
+        wav[21] = 0x00;
+        
+        // Number of channels (2)
+        wav[22] = 0x02;
+        wav[23] = 0x00;
+        
+        // Sample rate (44100 Hz)
+        wav[24] = 0x44;
+        wav[25] = (byte) 0xAC;
+        wav[26] = 0x00;
+        wav[27] = 0x00;
+        
+        // Byte rate (44100 * 2 * 2 = 176400)
+        wav[28] = (byte) 0x10;
+        wav[29] = (byte) 0xB1;
+        wav[30] = 0x02;
+        wav[31] = 0x00;
+        
+        // Block align (2 * 2 = 4)
+        wav[32] = 0x04;
+        wav[33] = 0x00;
+        
+        // Bits per sample (16)
+        wav[34] = 0x10;
+        wav[35] = 0x00;
+        
+        // data subchunk
+        wav[36] = 'd';
+        wav[37] = 'a';
+        wav[38] = 't';
+        wav[39] = 'a';
+        
+        // Data size (PCM data length)
+        wav[40] = (byte) (pcmData.length & 0xFF);
+        wav[41] = (byte) ((pcmData.length >> 8) & 0xFF);
+        wav[42] = (byte) ((pcmData.length >> 16) & 0xFF);
+        wav[43] = (byte) ((pcmData.length >> 24) & 0xFF);
+        
+        // Copy PCM data
+        System.arraycopy(pcmData, 0, wav, 44, pcmData.length);
+        
+        return wav;
     }
 }
