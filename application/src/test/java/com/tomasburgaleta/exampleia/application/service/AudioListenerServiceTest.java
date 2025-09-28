@@ -1,6 +1,6 @@
 package com.tomasburgaleta.exampleia.application.service;
 
-import com.tomasburgaleta.exampleia.domain.model.MIObject;
+import com.tomasburgaleta.exampleia.domain.model.AudioBean;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,15 +28,15 @@ class AudioListenerServiceTest {
     void shouldProcessAudioSuccessfully() throws AudioProcessingException {
         // Given
         byte[] audioData = {1, 2, 3, 4};
-        MIObject miObject = new MIObject("test-id", audioData);
-        when(audioListenerPort.listenAudio(miObject)).thenReturn(audioData);
+        AudioBean audioBean = new AudioBean("test-id", audioData);
+        when(audioListenerPort.listenAudio(audioBean)).thenReturn(audioData);
         
         // When
-        byte[] result = audioListenerService.listenAudio(miObject);
+        byte[] result = audioListenerService.listenAudio(audioBean);
         
         // Then
         assertArrayEquals(audioData, result);
-        verify(audioListenerPort).listenAudio(miObject);
+        verify(audioListenerPort).listenAudio(audioBean);
     }
     
     @Test
@@ -51,14 +51,14 @@ class AudioListenerServiceTest {
     @Test
     void shouldThrowExceptionWhenAudioDataIsNull() {
         // Given
-        MIObject miObject = new MIObject("test-id", new byte[]{1});
+        AudioBean audioBean = new AudioBean("test-id", new byte[]{1});
         // Simulate null audio data by creating object with data then setting it to null via reflection
         // Actually, we can't modify the audio data, so we'll create a new object with empty data
-        MIObject emptyMIObject = new MIObject("test-id", new byte[]{});
+        AudioBean emptyAudioBean = new AudioBean("test-id", new byte[]{});
         
         // When & Then
         assertThrows(IllegalArgumentException.class, 
-            () -> audioListenerService.listenAudio(emptyMIObject));
+            () -> audioListenerService.listenAudio(emptyAudioBean));
         
         verifyNoInteractions(audioListenerPort);
     }
@@ -67,16 +67,16 @@ class AudioListenerServiceTest {
     void shouldPropagateAudioProcessingException() throws AudioProcessingException {
         // Given
         byte[] audioData = {1, 2, 3, 4};
-        MIObject miObject = new MIObject("test-id", audioData);
+        AudioBean audioBean = new AudioBean("test-id", audioData);
         AudioProcessingException exception = new AudioProcessingException("Processing failed");
-        when(audioListenerPort.listenAudio(miObject)).thenThrow(exception);
+        when(audioListenerPort.listenAudio(audioBean)).thenThrow(exception);
         
         // When & Then
         AudioProcessingException thrown = assertThrows(AudioProcessingException.class,
-            () -> audioListenerService.listenAudio(miObject));
+            () -> audioListenerService.listenAudio(audioBean));
         
         assertEquals("Processing failed", thrown.getMessage());
-        verify(audioListenerPort).listenAudio(miObject);
+        verify(audioListenerPort).listenAudio(audioBean);
     }
     
     @Test

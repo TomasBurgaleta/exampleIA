@@ -5,17 +5,45 @@ import java.util.Objects;
 /**
  * Domain entity to hold audio data and processing results
  */
-public class MIObject {
-    
-    private byte[] audioData;
+public class AudioBean {
+
+    private final byte[] audioData;
     private String transcribedText;
-    private String id;
+    private final String id;
+    private long samplesPerSecond;
+    private short bitsPerSample;
+    private short channels;
+
     
-    public MIObject(String id, byte[] audioData) {
+    public AudioBean(String id, byte[] audioData) {
         this.id = Objects.requireNonNull(id, "ID cannot be null");
         this.audioData = Objects.requireNonNull(audioData, "Audio data cannot be null");
     }
-    
+
+    public long getSamplesPerSecond() {
+        return samplesPerSecond;
+    }
+
+    public void setSamplesPerSecond(long samplesPerSecond) {
+        this.samplesPerSecond = samplesPerSecond;
+    }
+
+    public short getChannels() {
+        return channels;
+    }
+
+    public void setChannels(short channels) {
+        this.channels = channels;
+    }
+
+    public short getBitsPerSample() {
+        return bitsPerSample;
+    }
+
+    public void setBitsPerSample(short bitsPerSample) {
+        this.bitsPerSample = bitsPerSample;
+    }
+
     public String getId() {
         return id;
     }
@@ -40,8 +68,8 @@ public class MIObject {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MIObject miObject = (MIObject) o;
-        return Objects.equals(id, miObject.id);
+        AudioBean audioBean = (AudioBean) o;
+        return Objects.equals(id, audioBean.id);
     }
     
     @Override

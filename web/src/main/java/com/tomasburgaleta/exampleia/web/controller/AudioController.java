@@ -1,7 +1,7 @@
 package com.tomasburgaleta.exampleia.web.controller;
 
 import com.tomasburgaleta.exampleia.application.service.AudioListenerService;
-import com.tomasburgaleta.exampleia.domain.model.MIObject;
+import com.tomasburgaleta.exampleia.domain.model.AudioBean;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,16 +48,16 @@ public class AudioController {
             // Create MIObject and process
             byte[] audioData = file.getBytes();
             String objectId = UUID.randomUUID().toString();
-            MIObject miObject = new MIObject(objectId, audioData);
+            AudioBean audioBean = new AudioBean(objectId, audioData);
             
             // Process audio
-            byte[] processedAudio = audioListenerService.listenAudio(miObject);
+            byte[] processedAudio = audioListenerService.listenAudio(audioBean);
             
             // Build response
-            response.put("id", miObject.getId());
-            response.put("transcribedText", miObject.getTranscribedText());
+            response.put("id", audioBean.getId());
+            response.put("transcribedText", audioBean.getTranscribedText());
             response.put("audioSize", processedAudio.length);
-            response.put("hasTranscription", miObject.hasTranscribedText());
+            response.put("hasTranscription", audioBean.hasTranscribedText());
             
             return ResponseEntity.ok(response);
             

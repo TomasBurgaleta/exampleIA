@@ -3,7 +3,7 @@ package com.tomasburgaleta.exampleia.domain.model;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class MIObjectTest {
+class AudioBeanTest {
     
     @Test
     void shouldCreateMIObjectWithValidData() {
@@ -12,13 +12,13 @@ class MIObjectTest {
         byte[] audioData = {1, 2, 3, 4};
         
         // When
-        MIObject miObject = new MIObject(id, audioData);
+        AudioBean audioBean = new AudioBean(id, audioData);
         
         // Then
-        assertEquals(id, miObject.getId());
-        assertArrayEquals(audioData, miObject.getAudioData());
-        assertNull(miObject.getTranscribedText());
-        assertFalse(miObject.hasTranscribedText());
+        assertEquals(id, audioBean.getId());
+        assertArrayEquals(audioData, audioBean.getAudioData());
+        assertNull(audioBean.getTranscribedText());
+        assertFalse(audioBean.hasTranscribedText());
     }
     
     @Test
@@ -27,7 +27,7 @@ class MIObjectTest {
         byte[] audioData = {1, 2, 3, 4};
         
         // When & Then
-        assertThrows(NullPointerException.class, () -> new MIObject(null, audioData));
+        assertThrows(NullPointerException.class, () -> new AudioBean(null, audioData));
     }
     
     @Test
@@ -36,44 +36,44 @@ class MIObjectTest {
         String id = "test-id";
         
         // When & Then
-        assertThrows(NullPointerException.class, () -> new MIObject(id, null));
+        assertThrows(NullPointerException.class, () -> new AudioBean(id, null));
     }
     
     @Test
     void shouldSetAndGetTranscribedText() {
         // Given
-        MIObject miObject = new MIObject("test-id", new byte[]{1, 2, 3});
+        AudioBean audioBean = new AudioBean("test-id", new byte[]{1, 2, 3});
         String transcribedText = "Hello world";
         
         // When
-        miObject.setTranscribedText(transcribedText);
+        audioBean.setTranscribedText(transcribedText);
         
         // Then
-        assertEquals(transcribedText, miObject.getTranscribedText());
-        assertTrue(miObject.hasTranscribedText());
+        assertEquals(transcribedText, audioBean.getTranscribedText());
+        assertTrue(audioBean.hasTranscribedText());
     }
     
     @Test
     void shouldReturnFalseForHasTranscribedTextWhenEmpty() {
         // Given
-        MIObject miObject = new MIObject("test-id", new byte[]{1, 2, 3});
+        AudioBean audioBean = new AudioBean("test-id", new byte[]{1, 2, 3});
         
         // When
-        miObject.setTranscribedText("");
+        audioBean.setTranscribedText("");
         
         // Then
-        assertFalse(miObject.hasTranscribedText());
+        assertFalse(audioBean.hasTranscribedText());
     }
     
     @Test
     void shouldReturnFalseForHasTranscribedTextWhenWhitespace() {
         // Given
-        MIObject miObject = new MIObject("test-id", new byte[]{1, 2, 3});
+        AudioBean audioBean = new AudioBean("test-id", new byte[]{1, 2, 3});
         
         // When
-        miObject.setTranscribedText("   ");
+        audioBean.setTranscribedText("   ");
         
         // Then
-        assertFalse(miObject.hasTranscribedText());
+        assertFalse(audioBean.hasTranscribedText());
     }
 }

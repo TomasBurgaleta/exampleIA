@@ -64,13 +64,13 @@ public class AudioTranscriptionService {
         
         // Create MIObject for processing
         String objectId = UUID.randomUUID().toString();
-        MIObject miObject = new MIObject(objectId, audioData);
+        MIObject audioBean = new MIObject(objectId, audioData);
         
         // Process with existing audio listener service
-        audioListenerService.listenAudio(miObject);
+        audioListenerService.listenAudio(audioBean);
         
         // Return transcribed text
-        return miObject.getTranscribedText();
+        return audioBean.getTranscribedText();
     }
 }
 ```

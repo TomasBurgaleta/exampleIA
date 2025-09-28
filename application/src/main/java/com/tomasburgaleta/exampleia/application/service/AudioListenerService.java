@@ -1,6 +1,6 @@
 package com.tomasburgaleta.exampleia.application.service;
 
-import com.tomasburgaleta.exampleia.domain.model.MIObject;
+import com.tomasburgaleta.exampleia.domain.model.AudioBean;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 
@@ -21,18 +21,18 @@ public class AudioListenerService {
     /**
      * Processes audio contained in the MIObject and updates it with transcribed text
      * 
-     * @param miObject The object containing audio data to process
+     * @param audioBean The object containing audio data to process
      * @return The original audio data as byte array
      * @throws AudioProcessingException if the audio cannot be processed
      * @throws IllegalArgumentException if the MIObject is null or has no audio data
      */
-    public byte[] listenAudio(MIObject miObject) throws AudioProcessingException {
-        Objects.requireNonNull(miObject, "MIObject cannot be null");
+    public byte[] listenAudio(AudioBean audioBean) throws AudioProcessingException {
+        Objects.requireNonNull(audioBean, "MIObject cannot be null");
         
-        if (miObject.getAudioData() == null || miObject.getAudioData().length == 0) {
+        if (audioBean.getAudioData() == null || audioBean.getAudioData().length == 0) {
             throw new IllegalArgumentException("MIObject must contain audio data");
         }
         
-        return audioListenerPort.listenAudio(miObject);
+        return audioListenerPort.listenAudio(audioBean);
     }
 }

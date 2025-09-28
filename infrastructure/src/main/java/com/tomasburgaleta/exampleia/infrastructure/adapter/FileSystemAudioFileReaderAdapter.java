@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 /**
  * File system implementation of the AudioFileReaderPort
@@ -48,7 +49,25 @@ public class FileSystemAudioFileReaderAdapter implements AudioFileReaderPort {
         // Validate WAV format
         validateWavFormat(fileBytes, filePath);
         
-        return fileBytes;
+        return extractPcmFromWav(fileBytes);
+    }
+
+    public byte[] extractPcmFromWav(byte[] wavBytes) {
+        int offset = 12; // después de "RIFF" y "WAVE"
+        while (offset < wavBytes.length - 8) {
+            String chunkId = new String(wavBytes, offset, 4);
+            int chunkSize = ((wavBytes[offset+4] & 0xFF)) |
+                    ((wavBytes[offset+5] & 0xFF) << 8) |
+                    ((wavBytes[offset+6] & 0xFF) << 16) |
+                    ((wavBytes[offset+7] & 0xFF) << 24);
+
+            if ("data".equals(chunkId)) {
+                // Encontramos el bloque con las muestras
+                return Arrays.copyOfRange(wavBytes, offset + 8, offset + 8 + chunkSize);
+            }
+            offset += 8 + chunkSize;
+        }
+        throw new IllegalArgumentException("No se encontró chunk 'data' en el WAV");
     }
     
     /**
