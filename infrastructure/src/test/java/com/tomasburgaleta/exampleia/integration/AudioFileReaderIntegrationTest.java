@@ -40,19 +40,11 @@ class AudioFileReaderIntegrationTest {
         
         // Assert
         assertNotNull(result);
-        assertTrue(result.length >= 44); // Minimum WAV header size
+        assertTrue(result.length >= 8); // Should have at least the PCM data (8 bytes)
         
-        // Verify RIFF header
-        assertEquals('R', result[0]);
-        assertEquals('I', result[1]);
-        assertEquals('F', result[2]);
-        assertEquals('F', result[3]);
-        
-        // Verify WAVE format
-        assertEquals('W', result[8]);
-        assertEquals('A', result[9]);
-        assertEquals('V', result[10]);
-        assertEquals('E', result[11]);
+        // The result should be the PCM data without the WAV header
+        // With our test data, it should be exactly 8 bytes of PCM data
+        assertEquals(8, result.length);
     }
     
     @Test
@@ -90,81 +82,86 @@ class AudioFileReaderIntegrationTest {
     }
     
     /**
-     * Creates a minimal valid WAV header for testing
+     * Creates a minimal valid WAV header with actual PCM data for testing
      */
     private byte[] createValidWavHeader() {
-        byte[] header = new byte[44]; // Standard WAV header size
+        byte[] pcmData = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // 8 bytes of PCM data
+        byte[] wav = new byte[44 + pcmData.length]; // Header + PCM data
         
         // RIFF header
-        header[0] = 'R';
-        header[1] = 'I';
-        header[2] = 'F';
-        header[3] = 'F';
+        wav[0] = 'R';
+        wav[1] = 'I';
+        wav[2] = 'F';
+        wav[3] = 'F';
         
-        // File size (36 bytes after this point)
-        header[4] = 0x24;
-        header[5] = 0x00;
-        header[6] = 0x00;
-        header[7] = 0x00;
+        // File size (36 bytes after this point + PCM data)
+        int fileSize = 36 + pcmData.length;
+        wav[4] = (byte) (fileSize & 0xFF);
+        wav[5] = (byte) ((fileSize >> 8) & 0xFF);
+        wav[6] = (byte) ((fileSize >> 16) & 0xFF);
+        wav[7] = (byte) ((fileSize >> 24) & 0xFF);
         
         // WAVE format
-        header[8] = 'W';
-        header[9] = 'A';
-        header[10] = 'V';
-        header[11] = 'E';
+        wav[8] = 'W';
+        wav[9] = 'A';
+        wav[10] = 'V';
+        wav[11] = 'E';
         
         // fmt sub-chunk
-        header[12] = 'f';
-        header[13] = 'm';
-        header[14] = 't';
-        header[15] = ' ';
+        wav[12] = 'f';
+        wav[13] = 'm';
+        wav[14] = 't';
+        wav[15] = ' ';
         
         // Sub-chunk size (16 bytes)
-        header[16] = 0x10;
-        header[17] = 0x00;
-        header[18] = 0x00;
-        header[19] = 0x00;
+        wav[16] = 0x10;
+        wav[17] = 0x00;
+        wav[18] = 0x00;
+        wav[19] = 0x00;
         
         // Audio format (PCM = 1)
-        header[20] = 0x01;
-        header[21] = 0x00;
+        wav[20] = 0x01;
+        wav[21] = 0x00;
         
         // Number of channels (1)
-        header[22] = 0x01;
-        header[23] = 0x00;
+        wav[22] = 0x01;
+        wav[23] = 0x00;
         
         // Sample rate (44100 Hz)
-        header[24] = 0x44;
-        header[25] = (byte) 0xAC;
-        header[26] = 0x00;
-        header[27] = 0x00;
+        wav[24] = 0x44;
+        wav[25] = (byte) 0xAC;
+        wav[26] = 0x00;
+        wav[27] = 0x00;
         
         // Byte rate (44100 * 1 * 2 = 88200)
-        header[28] = (byte) 0x88;
-        header[29] = 0x58;
-        header[30] = 0x01;
-        header[31] = 0x00;
+        wav[28] = (byte) 0x88;
+        wav[29] = 0x58;
+        wav[30] = 0x01;
+        wav[31] = 0x00;
         
         // Block align (1 * 2 = 2)
-        header[32] = 0x02;
-        header[33] = 0x00;
+        wav[32] = 0x02;
+        wav[33] = 0x00;
         
         // Bits per sample (16)
-        header[34] = 0x10;
-        header[35] = 0x00;
+        wav[34] = 0x10;
+        wav[35] = 0x00;
         
         // data sub-chunk
-        header[36] = 'd';
-        header[37] = 'a';
-        header[38] = 't';
-        header[39] = 'a';
+        wav[36] = 'd';
+        wav[37] = 'a';
+        wav[38] = 't';
+        wav[39] = 'a';
         
-        // Data size (0 for no audio data)
-        header[40] = 0x00;
-        header[41] = 0x00;
-        header[42] = 0x00;
-        header[43] = 0x00;
+        // Data size (PCM data length)
+        wav[40] = (byte) (pcmData.length & 0xFF);
+        wav[41] = (byte) ((pcmData.length >> 8) & 0xFF);
+        wav[42] = (byte) ((pcmData.length >> 16) & 0xFF);
+        wav[43] = (byte) ((pcmData.length >> 24) & 0xFF);
         
-        return header;
+        // Copy PCM data
+        System.arraycopy(pcmData, 0, wav, 44, pcmData.length);
+        
+        return wav;
     }
 }
