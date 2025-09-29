@@ -13,7 +13,61 @@
             <p>Sube un archivo WAV y obtén su transcripción usando Azure Speech Services</p>
         </header>
 
+        <!-- Audio Recording Section -->
+        <div class="recording-section">
+            <h2>🎙️ Grabar Audio</h2>
+            <p>Graba audio directamente desde tu micrófono y descárgalo como archivo WAV</p>
+            
+            <div class="recording-controls">
+                <div class="quality-selector">
+                    <label for="sampleRate">Frecuencia de muestreo:</label>
+                    <select id="sampleRate">
+                        <option value="8000">8 kHz</option>
+                        <option value="16000">16 kHz</option>
+                        <option value="44100" selected>44.1 kHz</option>
+                    </select>
+                    
+                    <label for="bitDepth">Profundidad de bits:</label>
+                    <select id="bitDepth">
+                        <option value="8">8 bits</option>
+                        <option value="16" selected>16 bits</option>
+                        <option value="24">24 bits</option>
+                    </select>
+                </div>
+                
+                <div class="recording-ui">
+                    <div class="recording-status">
+                        <span id="recordingTime">00:00</span>
+                        <div id="volumeIndicator" class="volume-indicator">
+                            <div class="volume-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="recording-buttons">
+                        <button id="recordBtn" class="record-btn">
+                            🎤 Iniciar Grabación
+                        </button>
+                        <button id="stopBtn" class="stop-btn" disabled>
+                            ⏹️ Detener
+                        </button>
+                        <button id="downloadBtn" class="download-btn" disabled>
+                            💾 Descargar WAV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="section-divider">
+            <span>O</span>
+        </div>
+
+        <!-- File Upload Section -->
         <div class="upload-section">
+            <h2>📁 Subir Archivo</h2>
+            <p>Sube un archivo WAV existente para transcribir</p>
+            
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="file-input-wrapper">
                     <input type="file" id="audioFile" name="file" accept=".wav,audio/wav" required>
