@@ -2,8 +2,10 @@ package com.tomasburgaleta.exampleia.web.config;
 
 import com.tomasburgaleta.exampleia.application.service.AudioFileReaderService;
 import com.tomasburgaleta.exampleia.application.service.AudioListenerService;
+import com.tomasburgaleta.exampleia.application.service.WavByteProcessingService;
 import com.tomasburgaleta.exampleia.domain.port.AudioFileReaderPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
+import com.tomasburgaleta.exampleia.domain.port.WavByteReaderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,5 +23,10 @@ public class ApplicationConfig {
     @Bean
     public AudioFileReaderService audioFileReaderService(AudioFileReaderPort audioFileReaderPort) {
         return new AudioFileReaderService(audioFileReaderPort);
+    }
+    
+    @Bean
+    public WavByteProcessingService wavByteProcessingService(WavByteReaderPort wavByteReaderPort) {
+        return new WavByteProcessingService(wavByteReaderPort);
     }
 }

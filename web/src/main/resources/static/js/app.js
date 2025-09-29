@@ -99,6 +99,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('audioSize').textContent = formatNumber(data.audioSize);
         document.getElementById('transcribedText').textContent = data.transcribedText || 'No se pudo obtener transcripción del audio.';
         
+        // Display WAV metadata information
+        document.getElementById('samplesPerSecond').textContent = formatNumber(data.samplesPerSecond);
+        document.getElementById('bitsPerSample').textContent = data.bitsPerSample;
+        document.getElementById('channels').textContent = data.channels === 1 ? '1 (Mono)' : data.channels === 2 ? '2 (Estéreo)' : data.channels;
+        
         result.classList.remove('hidden');
     }
 

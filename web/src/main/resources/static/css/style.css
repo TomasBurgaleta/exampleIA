@@ -185,6 +185,28 @@ header p {
     font-weight: 500;
 }
 
+/* WAV Information section */
+.wav-info-section {
+    background: #e8f5e8;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #28a745;
+}
+
+.wav-info-section h3 {
+    color: #155724;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+.wav-info-section .info-box {
+    background: white;
+    border-left: 4px solid #28a745;
+    margin-bottom: 10px;
+}
+
 .transcription-box {
     background: white;
     padding: 20px;

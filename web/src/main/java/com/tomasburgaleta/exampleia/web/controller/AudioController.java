@@ -1,7 +1,9 @@
 package com.tomasburgaleta.exampleia.web.controller;
 
 import com.tomasburgaleta.exampleia.application.service.AudioListenerService;
+import com.tomasburgaleta.exampleia.application.service.WavByteProcessingService;
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AudioFileException;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,9 +24,11 @@ import java.util.UUID;
 public class AudioController {
     
     private final AudioListenerService audioListenerService;
+    private final WavByteProcessingService wavByteProcessingService;
     
-    public AudioController(AudioListenerService audioListenerService) {
+    public AudioController(AudioListenerService audioListenerService, WavByteProcessingService wavByteProcessingService) {
         this.audioListenerService = audioListenerService;
+        this.wavByteProcessingService = wavByteProcessingService;
     }
     
     @PostMapping(value = "/transcribe", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -45,22 +49,32 @@ public class AudioController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Create MIObject and process
+            // Process WAV file and extract metadata
             byte[] audioData = file.getBytes();
             String objectId = UUID.randomUUID().toString();
-            AudioBean audioBean = new AudioBean(objectId, audioData);
             
-            // Process audio
+            // Use WavByteProcessingService to extract WAV metadata and create AudioBean
+            AudioBean audioBean = wavByteProcessingService.processWavBytes(audioData, objectId);
+            
+            // Process audio for transcription
             byte[] processedAudio = audioListenerService.listenAudio(audioBean);
             
-            // Build response
+            // Build response with WAV metadata
             response.put("id", audioBean.getId());
             response.put("transcribedText", audioBean.getTranscribedText());
             response.put("audioSize", processedAudio.length);
             response.put("hasTranscription", audioBean.hasTranscribedText());
             
+            // Add WAV metadata information
+            response.put("samplesPerSecond", audioBean.getSamplesPerSecond());
+            response.put("bitsPerSample", audioBean.getBitsPerSample());
+            response.put("channels", audioBean.getChannels());
+            
             return ResponseEntity.ok(response);
             
+        } catch (AudioFileException e) {
+            response.put("error", "Invalid WAV format: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (AudioProcessingException e) {
             response.put("error", "Audio processing failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
