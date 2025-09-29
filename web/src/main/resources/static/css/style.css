@@ -41,10 +41,199 @@ header p {
 }
 
 /* Upload section */
-.upload-section {
+.upload-section, .recording-section {
     padding: 40px;
     text-align: center;
 }
+
+.recording-section h2, .upload-section h2 {
+    color: #495057;
+    margin-bottom: 10px;
+    font-size: 1.8em;
+}
+
+.recording-section p, .upload-section p {
+    color: #6c757d;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+/* Recording Controls */
+.recording-controls {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.quality-selector {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.quality-selector label {
+    font-weight: 600;
+    color: #495057;
+    margin-right: 5px;
+}
+
+.quality-selector select {
+    padding: 8px 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 5px;
+    background: white;
+    font-size: 1em;
+    color: #495057;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.quality-selector select:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+/* Recording UI */
+.recording-ui {
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.recording-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+#recordingTime {
+    font-size: 2em;
+    font-weight: bold;
+    color: #495057;
+    font-family: 'Courier New', monospace;
+}
+
+.volume-indicator {
+    width: 150px;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.volume-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+    width: 0%;
+    transition: width 0.1s ease;
+    border-radius: 10px;
+}
+
+.recording-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.record-btn, .stop-btn, .download-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    min-width: 160px;
+}
+
+.record-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.record-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.record-btn.recording {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.stop-btn {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+}
+
+.stop-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.download-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+}
+
+.record-btn:disabled, .stop-btn:disabled, .download-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Section Divider */
+.section-divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.section-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #dee2e6;
+}
+
+.section-divider span {
+    background: white;
+    padding: 0 20px;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 1.2em;
+}
+
+/* Upload section */
+
 
 .file-input-wrapper {
     position: relative;
