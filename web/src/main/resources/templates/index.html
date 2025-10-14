@@ -53,6 +53,9 @@
                         <button id="downloadBtn" class="download-btn" disabled>
                             💾 Descargar WAV
                         </button>
+                        <button id="saveMemoryBtn" class="save-memory-btn" disabled>
+                            💾 Guardar en Memoria
+                        </button>
                     </div>
                 </div>
             </div>
@@ -85,6 +88,43 @@
         <div id="loading" class="loading hidden">
             <div class="spinner"></div>
             <p>Procesando audio con Azure Speech Services...</p>
+        </div>
+        
+        <div id="memoryResult" class="result hidden">
+            <h2>💾 Audio Guardado en Memoria</h2>
+            <div class="result-content">
+                <div class="info-box">
+                    <strong>ID de grabación:</strong>
+                    <span id="memoryRecordingId"></span>
+                </div>
+                <div class="info-box">
+                    <strong>Tamaño de datos PCM:</strong>
+                    <span id="memoryDataSize"></span> bytes
+                </div>
+                
+                <!-- Recording Metadata Section -->
+                <div class="wav-info-section">
+                    <h3>🎵 Metadatos del Audio</h3>
+                    <div class="info-box">
+                        <strong>Frecuencia de muestreo:</strong>
+                        <span id="memorySamplesPerSecond"></span> Hz
+                    </div>
+                    <div class="info-box">
+                        <strong>Profundidad de bits:</strong>
+                        <span id="memoryBitsPerSample"></span> bits
+                    </div>
+                    <div class="info-box">
+                        <strong>Canales:</strong>
+                        <span id="memoryChannels"></span>
+                    </div>
+                </div>
+                <button id="clearMemoryBtn" class="secondary-btn">
+                    🗑️ Limpiar de Memoria
+                </button>
+                <button id="newMemoryRecording" class="secondary-btn">
+                    🔄 Nueva Grabación
+                </button>
+            </div>
         </div>
 
         <div id="result" class="result hidden">
