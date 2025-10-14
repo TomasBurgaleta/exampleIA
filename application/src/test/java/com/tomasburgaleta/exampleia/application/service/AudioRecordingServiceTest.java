@@ -1,6 +1,7 @@
 package com.tomasburgaleta.exampleia.application.service;
 
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,16 +19,19 @@ class AudioRecordingServiceTest {
     @Mock
     private AudioRecordingPort audioRecordingPort;
     
+    @Mock
+    private AudioListenerPort audioListenerPort;
+    
     private AudioRecordingService audioRecordingService;
     
     @BeforeEach
     void setUp() {
-        audioRecordingService = new AudioRecordingService(audioRecordingPort);
+        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort);
     }
     
     @Test
     void testConstructorWithNullPort() {
-        assertThrows(NullPointerException.class, () -> new AudioRecordingService(null));
+        assertThrows(NullPointerException.class, () -> new AudioRecordingService(null, audioListenerPort));
     }
     
     @Test

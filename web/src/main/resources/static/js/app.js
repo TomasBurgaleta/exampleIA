@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const memoryResult = document.getElementById('memoryResult');
     const clearMemoryBtn = document.getElementById('clearMemoryBtn');
     const newMemoryRecording = document.getElementById('newMemoryRecording');
+    const transcribeMemoryBtn = document.getElementById('transcribeMemoryBtn');
 
     // Audio recording variables
     let mediaRecorder;
@@ -315,6 +316,34 @@ document.addEventListener('DOMContentLoaded', function() {
     
     newMemoryRecording.addEventListener('click', function() {
         resetForm();
+    });
+    
+    transcribeMemoryBtn.addEventListener('click', async function() {
+        if (currentRecordingId) {
+            try {
+                showLoading();
+                
+                const response = await fetch(`/api/recording/${currentRecordingId}/transcribe`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.success && data.hasTranscription) {
+                    showResult(data);
+                } else if (data.error) {
+                    showError(data.error);
+                } else {
+                    showError('No se pudo transcribir el audio');
+                }
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error transcribing from memory:', error);
+                showError('Error al transcribir desde memoria: ' + error.message);
+            }
+        }
     });
 
     function startRecording() {

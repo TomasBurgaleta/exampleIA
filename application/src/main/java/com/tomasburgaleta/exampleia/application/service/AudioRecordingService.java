@@ -1,8 +1,12 @@
 package com.tomasburgaleta.exampleia.application.service;
 
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
+import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -13,9 +17,11 @@ import java.util.UUID;
 public class AudioRecordingService {
     
     private final AudioRecordingPort audioRecordingPort;
+    private final AudioListenerPort audioListenerPort;
     
-    public AudioRecordingService(AudioRecordingPort audioRecordingPort) {
+    public AudioRecordingService(AudioRecordingPort audioRecordingPort, AudioListenerPort audioListenerPort) {
         this.audioRecordingPort = Objects.requireNonNull(audioRecordingPort, "AudioRecordingPort cannot be null");
+        this.audioListenerPort = Objects.requireNonNull(audioListenerPort, "AudioListenerPort cannot be null");
     }
     
     /**
@@ -88,5 +94,88 @@ public class AudioRecordingService {
         }
         
         return audioRecordingPort.clearRecording(id);
+    }
+    
+    /**
+     * Transcribes audio stored in memory by its ID
+     * Converts PCM data to WAV format and processes it for transcription
+     * 
+     * @param id The unique identifier of the recording to transcribe
+     * @return The audio bean with transcription result
+     * @throws IllegalArgumentException if id is null or empty or recording not found
+     * @throws AudioProcessingException if transcription fails
+     */
+    public AudioBean transcribeRecording(String id) throws AudioProcessingException {
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException("Recording ID cannot be null or empty");
+        }
+        
+        // Get the recording from memory
+        AudioBean audioBean = audioRecordingPort.getRecording(id);
+        
+        if (audioBean == null) {
+            throw new IllegalArgumentException("Recording not found with ID: " + id);
+        }
+        
+        // Convert PCM data to WAV format
+        byte[] wavData = convertPcmToWav(
+            audioBean.getAudioData(),
+            audioBean.getSamplesPerSecond(),
+            audioBean.getBitsPerSample(),
+            audioBean.getChannels()
+        );
+        
+        // Create a new AudioBean with WAV data for transcription
+        AudioBean wavAudioBean = new AudioBean(audioBean.getId(), wavData);
+        wavAudioBean.setSamplesPerSecond(audioBean.getSamplesPerSecond());
+        wavAudioBean.setBitsPerSample(audioBean.getBitsPerSample());
+        wavAudioBean.setChannels(audioBean.getChannels());
+        
+        // Process audio for transcription
+        audioListenerPort.listenAudio(wavAudioBean);
+        
+        // Update the original audio bean with transcription
+        audioBean.setTranscribedText(wavAudioBean.getTranscribedText());
+        
+        return audioBean;
+    }
+    
+    /**
+     * Converts raw PCM audio data to WAV format by adding WAV header
+     * 
+     * @param pcmData Raw PCM audio data
+     * @param sampleRate Sample rate in Hz
+     * @param bitsPerSample Bits per sample (8, 16, 24, etc.)
+     * @param channels Number of audio channels
+     * @return Complete WAV file as byte array
+     */
+    private byte[] convertPcmToWav(byte[] pcmData, long sampleRate, short bitsPerSample, short channels) {
+        int pcmDataSize = pcmData.length;
+        int wavHeaderSize = 44;
+        
+        ByteBuffer buffer = ByteBuffer.allocate(wavHeaderSize + pcmDataSize);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        
+        // RIFF header
+        buffer.put("RIFF".getBytes());
+        buffer.putInt(36 + pcmDataSize); // File size - 8
+        buffer.put("WAVE".getBytes());
+        
+        // fmt chunk
+        buffer.put("fmt ".getBytes());
+        buffer.putInt(16); // fmt chunk size (PCM)
+        buffer.putShort((short) 1); // Audio format (1 = PCM)
+        buffer.putShort(channels);
+        buffer.putInt((int) sampleRate);
+        buffer.putInt((int) (sampleRate * channels * bitsPerSample / 8)); // Byte rate
+        buffer.putShort((short) (channels * bitsPerSample / 8)); // Block align
+        buffer.putShort(bitsPerSample);
+        
+        // data chunk
+        buffer.put("data".getBytes());
+        buffer.putInt(pcmDataSize);
+        buffer.put(pcmData);
+        
+        return buffer.array();
     }
 }
