@@ -14,10 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const recordBtn = document.getElementById('recordBtn');
     const stopBtn = document.getElementById('stopBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+    const saveMemoryBtn = document.getElementById('saveMemoryBtn');
     const recordingTime = document.getElementById('recordingTime');
     const volumeBar = document.querySelector('.volume-bar');
     const sampleRateSelect = document.getElementById('sampleRate');
     const bitDepthSelect = document.getElementById('bitDepth');
+    
+    // Memory result elements
+    const memoryResult = document.getElementById('memoryResult');
+    const clearMemoryBtn = document.getElementById('clearMemoryBtn');
+    const newMemoryRecording = document.getElementById('newMemoryRecording');
 
     // Audio recording variables
     let mediaRecorder;
@@ -29,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let analyser;
     let microphone;
     let dataArray;
+    let currentRecordingId = null;
 
     // Initialize audio recording
     initializeAudioRecording();
@@ -101,6 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const wavBlob = audioBufferToWav(audioBuffer, sampleRate, bitDepth);
             recordedBlob = wavBlob;
             downloadBtn.disabled = false;
+            saveMemoryBtn.disabled = false;
             
         } catch (error) {
             console.error('Error converting to WAV:', error);
@@ -198,6 +206,116 @@ document.addEventListener('DOMContentLoaded', function() {
             URL.revokeObjectURL(url);
         }
     });
+    
+    saveMemoryBtn.addEventListener('click', async function() {
+        if (recordedBlob) {
+            try {
+                // Extract PCM data from WAV blob
+                const arrayBuffer = await recordedBlob.arrayBuffer();
+                const dataView = new DataView(arrayBuffer);
+                
+                // Find the data chunk and extract PCM data
+                let offset = 12; // Start after RIFF header
+                let pcmData = null;
+                
+                while (offset < arrayBuffer.byteLength - 8) {
+                    const chunkId = String.fromCharCode(
+                        dataView.getUint8(offset),
+                        dataView.getUint8(offset + 1),
+                        dataView.getUint8(offset + 2),
+                        dataView.getUint8(offset + 3)
+                    );
+                    const chunkSize = dataView.getUint32(offset + 4, true);
+                    
+                    if (chunkId === 'data') {
+                        // Extract PCM data
+                        pcmData = new Uint8Array(arrayBuffer, offset + 8, chunkSize);
+                        break;
+                    }
+                    
+                    offset += 8 + chunkSize;
+                }
+                
+                if (!pcmData) {
+                    showError('No se pudo extraer los datos PCM del audio.');
+                    return;
+                }
+                
+                // Get audio metadata from selected options
+                const sampleRate = parseInt(sampleRateSelect.value);
+                const bitDepth = parseInt(bitDepthSelect.value);
+                const channels = 2; // Assuming stereo for browser recording
+                
+                // Convert Uint8Array to regular array for JSON
+                const pcmArray = Array.from(pcmData);
+                
+                // Prepare request
+                const request = {
+                    pcmData: pcmArray,
+                    samplesPerSecond: sampleRate,
+                    bitsPerSample: bitDepth,
+                    channels: channels
+                };
+                
+                showLoading();
+                
+                // Make API call to save in memory
+                const response = await fetch('/api/recording/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.success) {
+                    currentRecordingId = data.id;
+                    showMemoryResult(data);
+                } else {
+                    showError(data.error || 'Error al guardar en memoria');
+                }
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error saving to memory:', error);
+                showError('Error al guardar el audio en memoria: ' + error.message);
+            }
+        }
+    });
+    
+    clearMemoryBtn.addEventListener('click', async function() {
+        if (currentRecordingId) {
+            try {
+                showLoading();
+                
+                const response = await fetch(`/api/recording/${currentRecordingId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                hideLoading();
+                
+                if (data.success) {
+                    currentRecordingId = null;
+                    resetForm();
+                } else {
+                    showError(data.error || 'Error al limpiar de memoria');
+                }
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error clearing memory:', error);
+                showError('Error al limpiar de memoria: ' + error.message);
+            }
+        }
+    });
+    
+    newMemoryRecording.addEventListener('click', function() {
+        resetForm();
+    });
 
     function startRecording() {
         audioChunks = [];
@@ -211,6 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
         recordBtn.disabled = true;
         stopBtn.disabled = false;
         downloadBtn.disabled = true;
+        saveMemoryBtn.disabled = true;
         
         // Start timer
         recordingTimer = setInterval(updateRecordingTime, 100);
@@ -363,6 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideAllSections() {
         loading.classList.add('hidden');
         result.classList.add('hidden');
+        memoryResult.classList.add('hidden');
         error.classList.add('hidden');
         document.querySelector('.recording-section').style.display = 'none';
         document.querySelector('.upload-section').style.display = 'none';
@@ -386,11 +506,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         recordedBlob = null;
         downloadBtn.disabled = true;
+        saveMemoryBtn.disabled = true;
         recordingTime.textContent = '00:00';
         volumeBar.style.width = '0%';
+        currentRecordingId = null;
         
         hideAllSections();
         showMainSections();
+    }
+    
+    function showMemoryResult(data) {
+        hideAllSections();
+        
+        document.getElementById('memoryRecordingId').textContent = data.id;
+        document.getElementById('memoryDataSize').textContent = formatNumber(data.dataSize);
+        document.getElementById('memorySamplesPerSecond').textContent = formatNumber(data.samplesPerSecond);
+        document.getElementById('memoryBitsPerSample').textContent = data.bitsPerSample;
+        document.getElementById('memoryChannels').textContent = data.channels === 1 ? '1 (Mono)' : data.channels === 2 ? '2 (Estéreo)' : data.channels;
+        
+        memoryResult.classList.remove('hidden');
     }
 
     function formatFileSize(bytes) {

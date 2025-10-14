@@ -201,7 +201,17 @@ header p {
     box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
 }
 
-.record-btn:disabled, .stop-btn:disabled, .download-btn:disabled {
+.save-memory-btn {
+    background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+    color: white;
+}
+
+.save-memory-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4);
+}
+
+.record-btn:disabled, .stop-btn:disabled, .download-btn:disabled, .save-memory-btn:disabled {
     background: #6c757d;
     cursor: not-allowed;
     transform: none;
