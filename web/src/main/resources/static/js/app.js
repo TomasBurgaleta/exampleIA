@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const volumeBar = document.querySelector('.volume-bar');
     const sampleRateSelect = document.getElementById('sampleRate');
     const bitDepthSelect = document.getElementById('bitDepth');
+    const channelsSelect = document.getElementById('channels');
     const autoTranscribeCheckbox = document.getElementById('autoTranscribe');
     
     // Memory result elements
@@ -106,8 +107,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const sampleRate = parseInt(sampleRateSelect.value);
             const bitDepth = parseInt(bitDepthSelect.value);
+            const channels = parseInt(channelsSelect.value);
             
-            const wavBlob = audioBufferToWav(audioBuffer, sampleRate, bitDepth);
+            const wavBlob = audioBufferToWav(audioBuffer, sampleRate, bitDepth, channels);
             recordedBlob = wavBlob;
             downloadBtn.disabled = false;
             saveMemoryBtn.disabled = false;
@@ -123,8 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function audioBufferToWav(buffer, sampleRate, bitDepth) {
-        const numberOfChannels = Math.min(buffer.numberOfChannels, 2);
+    function audioBufferToWav(buffer, sampleRate, bitDepth, channels) {
+        const numberOfChannels = Math.min(buffer.numberOfChannels, channels);
         const length = buffer.length * numberOfChannels * (bitDepth / 8);
         
         const arrayBuffer = new ArrayBuffer(44 + length);
@@ -146,15 +148,15 @@ document.addEventListener('DOMContentLoaded', function() {
         view.setUint32(40, length, true);
         
         // Convert audio data
-        const channels = [];
+        const channelData = [];
         for (let i = 0; i < numberOfChannels; i++) {
-            channels.push(buffer.getChannelData(i));
+            channelData.push(buffer.getChannelData(i));
         }
         
         let offset = 44;
         for (let i = 0; i < buffer.length; i++) {
             for (let channel = 0; channel < numberOfChannels; channel++) {
-                let sample = channels[channel][i];
+                let sample = channelData[channel][i];
                 
                 // Clamp sample to [-1, 1]
                 sample = Math.max(-1, Math.min(1, sample));
@@ -229,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get audio metadata from selected options
             const sampleRate = parseInt(sampleRateSelect.value);
             const bitDepth = parseInt(bitDepthSelect.value);
-            const channels = 2; // Assuming stereo for browser recording
+            const channels = parseInt(channelsSelect.value);
             
             // Convert Uint8Array to regular array for JSON
             const pcmArray = Array.from(pcmData);
@@ -350,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Get audio metadata from selected options
                 const sampleRate = parseInt(sampleRateSelect.value);
                 const bitDepth = parseInt(bitDepthSelect.value);
-                const channels = 2; // Assuming stereo for browser recording
+                const channels = parseInt(channelsSelect.value);
                 
                 // Convert Uint8Array to regular array for JSON
                 const pcmArray = Array.from(pcmData);
