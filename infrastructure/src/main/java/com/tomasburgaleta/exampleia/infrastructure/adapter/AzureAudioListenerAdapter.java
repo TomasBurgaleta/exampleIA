@@ -41,7 +41,7 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
         }
         
         try {
-            String transcribedText = transcribeAudio(audioData);
+            String transcribedText = transcribeAudio(audioData, audioBean.getSamplesPerSecond(), audioBean.getBitsPerSample(), audioBean.getChannels());
             audioBean.setTranscribedText(transcribedText);
             return audioData;
         } catch (Exception e) {
@@ -49,15 +49,24 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
         }
     }
     
-    private String transcribeAudio(byte[] audioData) throws AudioProcessingException {
-
+    private String transcribeAudio(byte[] audioData, long samplesPerSecond, short bitsPerSample, short channels) throws AudioProcessingException {
+        // Validate audio metadata
+        if (samplesPerSecond <= 0) {
+            throw new AudioProcessingException("Invalid samples per second: " + samplesPerSecond);
+        }
+        if (bitsPerSample <= 0) {
+            throw new AudioProcessingException("Invalid bits per sample: " + bitsPerSample);
+        }
+        if (channels <= 0) {
+            throw new AudioProcessingException("Invalid number of channels: " + channels);
+        }
         
         try (SpeechConfig speechConfig = SpeechConfig.fromSubscription(azureConfig.getSubscriptionKey(), azureConfig.getRegion())) {
             // Configure Azure Speech Services
             speechConfig.setSpeechRecognitionLanguage(azureConfig.getLanguage());
             
-            // Create audio input stream from byte array
-            AudioStreamFormat format = AudioStreamFormat.getWaveFormatPCM(44100L, (short) 16, (short) 1);
+            // Create audio input stream from byte array using AudioBean metadata
+            AudioStreamFormat format = AudioStreamFormat.getWaveFormatPCM(samplesPerSecond, bitsPerSample, channels);
             try (PushAudioInputStream pushStream = AudioInputStream.createPushStream(format)) {
                 AudioConfig audioConfig = AudioConfig.fromStreamInput(pushStream);
                 // Create speech recognizer
