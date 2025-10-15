@@ -265,6 +265,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             currentRecordingId = saveData.id;
             
+            // Check if silence was detected
+            if (saveData.isSilent) {
+                hideLoading();
+                console.log('Silencio detectado en el audio grabado');
+                showError('Se detectó silencio en el audio. Por favor, hable más alto o acérquese al micrófono.');
+                return;
+            }
+            
             // Step 2: Transcribe immediately
             const transcribeResponse = await fetch(`/api/recording/${currentRecordingId}/transcribe`, {
                 method: 'POST'
@@ -381,7 +389,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (data.success) {
                     currentRecordingId = data.id;
-                    showMemoryResult(data);
+                    
+                    // Check if silence was detected
+                    if (data.isSilent) {
+                        console.log('Silencio detectado en el audio grabado');
+                        showError('Se detectó silencio en el audio. Por favor, hable más alto o acérquese al micrófono.');
+                    } else {
+                        showMemoryResult(data);
+                    }
                 } else {
                     showError(data.error || 'Error al guardar en memoria');
                 }

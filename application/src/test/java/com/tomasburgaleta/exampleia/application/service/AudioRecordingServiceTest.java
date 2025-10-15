@@ -22,16 +22,19 @@ class AudioRecordingServiceTest {
     @Mock
     private AudioListenerPort audioListenerPort;
     
+    @Mock
+    private SilenceDetectionService silenceDetectionService;
+    
     private AudioRecordingService audioRecordingService;
     
     @BeforeEach
     void setUp() {
-        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort);
+        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService);
     }
     
     @Test
     void testConstructorWithNullPort() {
-        assertThrows(NullPointerException.class, () -> new AudioRecordingService(null, audioListenerPort));
+        assertThrows(NullPointerException.class, () -> new AudioRecordingService(null, audioListenerPort, silenceDetectionService));
     }
     
     @Test

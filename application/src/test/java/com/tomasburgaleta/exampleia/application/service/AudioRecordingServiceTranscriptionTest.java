@@ -24,11 +24,14 @@ class AudioRecordingServiceTranscriptionTest {
     @Mock
     private AudioListenerPort audioListenerPort;
     
+    @Mock
+    private SilenceDetectionService silenceDetectionService;
+    
     private AudioRecordingService audioRecordingService;
     
     @BeforeEach
     void setUp() {
-        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort);
+        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService);
     }
     
     @Test
