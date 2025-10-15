@@ -33,7 +33,7 @@ public class ApplicationConfig {
     }
     
     @Bean
-    public AudioRecordingService audioRecordingService(AudioRecordingPort audioRecordingPort) {
-        return new AudioRecordingService(audioRecordingPort);
+    public AudioRecordingService audioRecordingService(AudioRecordingPort audioRecordingPort, AudioListenerPort audioListenerPort) {
+        return new AudioRecordingService(audioRecordingPort, audioListenerPort);
     }
 }

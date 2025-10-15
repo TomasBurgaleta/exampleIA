@@ -2,6 +2,7 @@ package com.tomasburgaleta.exampleia.web.controller;
 
 import com.tomasburgaleta.exampleia.application.service.AudioRecordingService;
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -135,6 +136,47 @@ public class AudioRecordingController {
             response.put("error", e.getMessage());
             response.put("success", false);
             return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("error", "Internal server error: " + e.getMessage());
+            response.put("success", false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    /**
+     * Transcribes audio stored in memory
+     * Converts PCM data to WAV format and processes it for transcription
+     * 
+     * @param id The recording ID
+     * @return Response with transcription result and metadata
+     */
+    @PostMapping("/{id}/transcribe")
+    public ResponseEntity<Map<String, Object>> transcribeRecording(@PathVariable String id) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            AudioBean audioBean = audioRecordingService.transcribeRecording(id);
+            
+            // Build response with transcription and metadata
+            response.put("id", audioBean.getId());
+            response.put("transcribedText", audioBean.getTranscribedText());
+            response.put("hasTranscription", audioBean.hasTranscribedText());
+            response.put("audioSize", audioBean.getAudioData().length);
+            response.put("samplesPerSecond", audioBean.getSamplesPerSecond());
+            response.put("bitsPerSample", audioBean.getBitsPerSample());
+            response.put("channels", audioBean.getChannels());
+            response.put("success", true);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            response.put("success", false);
+            return ResponseEntity.badRequest().body(response);
+        } catch (AudioProcessingException e) {
+            response.put("error", "Audio processing failed: " + e.getMessage());
+            response.put("success", false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         } catch (Exception e) {
             response.put("error", "Internal server error: " + e.getMessage());
             response.put("success", false);
