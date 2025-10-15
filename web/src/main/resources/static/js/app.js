@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const volumeBar = document.querySelector('.volume-bar');
     const sampleRateSelect = document.getElementById('sampleRate');
     const bitDepthSelect = document.getElementById('bitDepth');
+    const autoTranscribeCheckbox = document.getElementById('autoTranscribe');
     
     // Memory result elements
     const memoryResult = document.getElementById('memoryResult');
@@ -111,6 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadBtn.disabled = false;
             saveMemoryBtn.disabled = false;
             
+            // Check if auto-transcribe is enabled
+            if (autoTranscribeCheckbox && autoTranscribeCheckbox.checked) {
+                await autoSaveAndTranscribe();
+            }
+            
         } catch (error) {
             console.error('Error converting to WAV:', error);
             showError('Error al procesar el audio grabado.');
@@ -178,6 +184,105 @@ document.addEventListener('DOMContentLoaded', function() {
     function writeString(view, offset, string) {
         for (let i = 0; i < string.length; i++) {
             view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    // Auto-save and transcribe function
+    async function autoSaveAndTranscribe() {
+        if (!recordedBlob) {
+            showError('No hay audio grabado para transcribir.');
+            return;
+        }
+
+        try {
+            // Extract PCM data from WAV blob
+            const arrayBuffer = await recordedBlob.arrayBuffer();
+            const dataView = new DataView(arrayBuffer);
+            
+            // Find the data chunk and extract PCM data
+            let offset = 12; // Start after RIFF header
+            let pcmData = null;
+            
+            while (offset < arrayBuffer.byteLength - 8) {
+                const chunkId = String.fromCharCode(
+                    dataView.getUint8(offset),
+                    dataView.getUint8(offset + 1),
+                    dataView.getUint8(offset + 2),
+                    dataView.getUint8(offset + 3)
+                );
+                const chunkSize = dataView.getUint32(offset + 4, true);
+                
+                if (chunkId === 'data') {
+                    // Extract PCM data
+                    pcmData = new Uint8Array(arrayBuffer, offset + 8, chunkSize);
+                    break;
+                }
+                
+                offset += 8 + chunkSize;
+            }
+            
+            if (!pcmData) {
+                showError('No se pudo extraer los datos PCM del audio.');
+                return;
+            }
+            
+            // Get audio metadata from selected options
+            const sampleRate = parseInt(sampleRateSelect.value);
+            const bitDepth = parseInt(bitDepthSelect.value);
+            const channels = 2; // Assuming stereo for browser recording
+            
+            // Convert Uint8Array to regular array for JSON
+            const pcmArray = Array.from(pcmData);
+            
+            // Prepare request
+            const request = {
+                pcmData: pcmArray,
+                samplesPerSecond: sampleRate,
+                bitsPerSample: bitDepth,
+                channels: channels
+            };
+            
+            showLoading();
+            
+            // Step 1: Save in memory
+            const saveResponse = await fetch('/api/recording/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(request)
+            });
+            
+            const saveData = await saveResponse.json();
+            
+            if (!saveData.success) {
+                hideLoading();
+                showError(saveData.error || 'Error al guardar en memoria');
+                return;
+            }
+            
+            currentRecordingId = saveData.id;
+            
+            // Step 2: Transcribe immediately
+            const transcribeResponse = await fetch(`/api/recording/${currentRecordingId}/transcribe`, {
+                method: 'POST'
+            });
+            
+            const transcribeData = await transcribeResponse.json();
+            hideLoading();
+            
+            if (transcribeData.success && transcribeData.hasTranscription) {
+                showResult(transcribeData);
+            } else if (transcribeData.error) {
+                showError(transcribeData.error);
+            } else {
+                showError('No se pudo transcribir el audio');
+            }
+            
+        } catch (error) {
+            hideLoading();
+            console.error('Error in auto-save and transcribe:', error);
+            showError('Error al transcribir automáticamente: ' + error.message);
         }
     }
 
