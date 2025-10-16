@@ -23,6 +23,17 @@ El servicio expone la interfaz `byte[] listenAudio(MIObject object)` que:
 3. Guarda el texto transcrito dentro del MIObject
 4. Retorna los datos de audio originales
 
+### Detección de Silencio
+
+El sistema incluye **detección automática de silencio** implementada en Java que:
+
+1. Analiza los datos PCM del audio grabado
+2. Calcula la amplitud RMS (Root Mean Square) de las muestras
+3. Determina si el audio contiene silencio (>95% de muestras por debajo del umbral)
+4. Informa al usuario si se detecta silencio, evitando el procesamiento innecesario
+
+Ver [SILENCE_DETECTION.md](SILENCE_DETECTION.md) para más detalles sobre esta funcionalidad.
+
 ## Configuración
 
 ### Requisitos

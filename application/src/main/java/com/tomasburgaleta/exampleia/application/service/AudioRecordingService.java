@@ -18,10 +18,14 @@ public class AudioRecordingService {
     
     private final AudioRecordingPort audioRecordingPort;
     private final AudioListenerPort audioListenerPort;
+    private final SilenceDetectionService silenceDetectionService;
     
-    public AudioRecordingService(AudioRecordingPort audioRecordingPort, AudioListenerPort audioListenerPort) {
+    public AudioRecordingService(AudioRecordingPort audioRecordingPort, 
+                                AudioListenerPort audioListenerPort,
+                                SilenceDetectionService silenceDetectionService) {
         this.audioRecordingPort = Objects.requireNonNull(audioRecordingPort, "AudioRecordingPort cannot be null");
         this.audioListenerPort = Objects.requireNonNull(audioListenerPort, "AudioListenerPort cannot be null");
+        this.silenceDetectionService = silenceDetectionService;
     }
     
     /**
@@ -64,6 +68,23 @@ public class AudioRecordingService {
         
         // Store in memory
         return audioRecordingPort.storeRecording(audioBean);
+    }
+    
+    /**
+     * Checks if the provided audio data contains silence
+     * 
+     * @param pcmData The PCM audio data to check
+     * @param samplesPerSecond The sample rate
+     * @param bitsPerSample The bit depth
+     * @param channels The number of channels
+     * @return true if silence is detected, false otherwise
+     */
+    public boolean detectSilence(byte[] pcmData, long samplesPerSecond, short bitsPerSample, short channels) {
+        if (silenceDetectionService == null) {
+            return false; // If no silence detection service, assume not silent
+        }
+        
+        return silenceDetectionService.isSilent(pcmData, samplesPerSecond, bitsPerSample, channels);
     }
     
     /**

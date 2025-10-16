@@ -48,12 +48,21 @@ public class AudioRecordingController {
                 request.getChannels()
             );
             
+            // Detect silence in the audio
+            boolean isSilent = audioRecordingService.detectSilence(
+                request.getPcmData(),
+                request.getSamplesPerSecond(),
+                request.getBitsPerSample(),
+                request.getChannels()
+            );
+            
             // Build response
             response.put("id", audioBean.getId());
             response.put("samplesPerSecond", audioBean.getSamplesPerSecond());
             response.put("bitsPerSample", audioBean.getBitsPerSample());
             response.put("channels", audioBean.getChannels());
             response.put("dataSize", audioBean.getAudioData().length);
+            response.put("isSilent", isSilent);
             response.put("success", true);
             
             return ResponseEntity.ok(response);
