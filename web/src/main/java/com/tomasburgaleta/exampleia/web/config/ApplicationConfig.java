@@ -3,6 +3,7 @@ package com.tomasburgaleta.exampleia.web.config;
 import com.tomasburgaleta.exampleia.application.service.AudioFileReaderService;
 import com.tomasburgaleta.exampleia.application.service.AudioListenerService;
 import com.tomasburgaleta.exampleia.application.service.AudioRecordingService;
+import com.tomasburgaleta.exampleia.application.service.AudioStreamingService;
 import com.tomasburgaleta.exampleia.application.service.SilenceDetectionService;
 import com.tomasburgaleta.exampleia.application.service.WavByteProcessingService;
 import com.tomasburgaleta.exampleia.domain.port.AudioFileReaderPort;
@@ -44,5 +45,10 @@ public class ApplicationConfig {
                                                        AudioListenerPort audioListenerPort,
                                                        SilenceDetectionService silenceDetectionService) {
         return new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService);
+    }
+    
+    @Bean
+    public AudioStreamingService audioStreamingService() {
+        return new AudioStreamingService();
     }
 }

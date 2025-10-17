@@ -27,6 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearMemoryBtn = document.getElementById('clearMemoryBtn');
     const newMemoryRecording = document.getElementById('newMemoryRecording');
     const transcribeMemoryBtn = document.getElementById('transcribeMemoryBtn');
+    
+    // Real-time transcription elements
+    const realtimeTranscriptionArea = document.getElementById('realtimeTranscriptionArea');
+    const realtimeTranscriptionText = document.getElementById('realtimeTranscriptionText');
+    const transcriptionStatus = document.getElementById('transcriptionStatus');
 
     // Audio recording variables
     let mediaRecorder;
@@ -39,6 +44,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let microphone;
     let dataArray;
     let currentRecordingId = null;
+    
+    // Streaming variables
+    let streamingSessionId = null;
+    let streamingInterval = null;
+    let silenceDetectionInterval = null;
+    let lastAudioTime = Date.now();
+    let silenceThreshold = 1000; // 1 second of silence
 
     // Initialize audio recording
     initializeAudioRecording();
@@ -59,8 +71,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Setup MediaRecorder
             mediaRecorder = new MediaRecorder(stream);
             
-            mediaRecorder.ondataavailable = function(event) {
+            mediaRecorder.ondataavailable = async function(event) {
                 audioChunks.push(event.data);
+                
+                // Send chunk to backend for streaming
+                if (streamingSessionId && event.data.size > 0) {
+                    try {
+                        const arrayBuffer = await event.data.arrayBuffer();
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                        
+                        // Convert to PCM
+                        const pcmData = extractPCMFromAudioBuffer(audioBuffer);
+                        
+                        // Send to backend
+                        const chunkResponse = await fetch('/api/stream/chunk', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                sessionId: streamingSessionId,
+                                pcmData: Array.from(pcmData)
+                            })
+                        });
+                        
+                        const chunkData = await chunkResponse.json();
+                        if (chunkData.success) {
+                            // Update status
+                            if (chunkData.isSilent) {
+                                transcriptionStatus.textContent = 'Detectando silencio...';
+                            } else {
+                                transcriptionStatus.textContent = 'Grabando... (' + Math.floor(chunkData.bufferSize / 1024) + ' KB)';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error sending audio chunk:', error);
+                    }
+                }
             };
             
             mediaRecorder.onstop = function() {
@@ -187,6 +235,51 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < string.length; i++) {
             view.setUint8(offset + i, string.charCodeAt(i));
         }
+    }
+    
+    function extractPCMFromAudioBuffer(audioBuffer) {
+        const sampleRate = parseInt(sampleRateSelect.value);
+        const bitDepth = parseInt(bitDepthSelect.value);
+        const channels = parseInt(channelsSelect.value);
+        
+        const numberOfChannels = Math.min(audioBuffer.numberOfChannels, channels);
+        const length = audioBuffer.length * numberOfChannels * (bitDepth / 8);
+        
+        const pcmData = new Uint8Array(length);
+        
+        // Convert audio data to PCM
+        const channelData = [];
+        for (let i = 0; i < numberOfChannels; i++) {
+            channelData.push(audioBuffer.getChannelData(i));
+        }
+        
+        let offset = 0;
+        for (let i = 0; i < audioBuffer.length; i++) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                let sample = channelData[channel][i];
+                
+                // Clamp sample to [-1, 1]
+                sample = Math.max(-1, Math.min(1, sample));
+                
+                if (bitDepth === 16) {
+                    sample = sample * 0x7FFF;
+                    const int16 = Math.round(sample);
+                    pcmData[offset++] = int16 & 0xFF;
+                    pcmData[offset++] = (int16 >> 8) & 0xFF;
+                } else if (bitDepth === 8) {
+                    sample = (sample + 1) * 0x7F;
+                    pcmData[offset++] = Math.round(sample);
+                } else if (bitDepth === 24) {
+                    sample = sample * 0x7FFFFF;
+                    const int24 = Math.round(sample);
+                    pcmData[offset++] = int24 & 0xFF;
+                    pcmData[offset++] = (int24 >> 8) & 0xFF;
+                    pcmData[offset++] = (int24 >> 16) & 0xFF;
+                }
+            }
+        }
+        
+        return pcmData;
     }
 
     // Auto-save and transcribe function
@@ -468,11 +561,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function startRecording() {
+    async function startRecording() {
         audioChunks = [];
         recordedBlob = null;
         
-        mediaRecorder.start();
+        // Show real-time transcription area
+        realtimeTranscriptionArea.classList.remove('hidden');
+        realtimeTranscriptionText.value = '';
+        transcriptionStatus.textContent = 'Esperando audio...';
+        transcriptionStatus.className = 'transcription-status';
+        
+        // Start streaming session
+        try {
+            const sessionResponse = await fetch('/api/stream/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    samplesPerSecond: parseInt(sampleRateSelect.value),
+                    bitsPerSample: parseInt(bitDepthSelect.value),
+                    channels: parseInt(channelsSelect.value)
+                })
+            });
+            
+            const sessionData = await sessionResponse.json();
+            if (sessionData.success) {
+                streamingSessionId = sessionData.sessionId;
+                lastAudioTime = Date.now();
+            } else {
+                showError('No se pudo iniciar la sesión de streaming');
+                return;
+            }
+        } catch (error) {
+            console.error('Error starting streaming session:', error);
+            showError('Error al iniciar streaming: ' + error.message);
+            return;
+        }
+        
+        mediaRecorder.start(250); // Send chunks every 250ms
         startTime = Date.now();
         
         recordBtn.textContent = '🔴 Grabando...';
@@ -494,10 +621,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 volumeBar.style.width = '0%';
             }
         }, 100);
+        
+        // Start silence detection
+        silenceDetectionInterval = setInterval(checkForSilence, 100);
     }
 
-    function stopRecording() {
-        mediaRecorder.stop();
+    async function stopRecording() {
+        if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
         
         recordBtn.textContent = '🎤 Iniciar Grabación';
         recordBtn.classList.remove('recording');
@@ -505,6 +637,64 @@ document.addEventListener('DOMContentLoaded', function() {
         stopBtn.disabled = true;
         
         clearInterval(recordingTimer);
+        clearInterval(silenceDetectionInterval);
+        
+        // Stop streaming and get transcription
+        if (streamingSessionId) {
+            try {
+                transcriptionStatus.textContent = 'Procesando transcripción...';
+                transcriptionStatus.className = 'transcription-status processing';
+                
+                const stopResponse = await fetch('/api/stream/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: streamingSessionId
+                    })
+                });
+                
+                const stopData = await stopResponse.json();
+                if (stopData.success && stopData.hasTranscription) {
+                    realtimeTranscriptionText.value = stopData.transcribedText;
+                    transcriptionStatus.textContent = 'Transcripción completada';
+                    transcriptionStatus.className = 'transcription-status completed';
+                } else if (stopData.error) {
+                    transcriptionStatus.textContent = 'Error: ' + stopData.error;
+                    transcriptionStatus.className = 'transcription-status error';
+                } else {
+                    transcriptionStatus.textContent = 'No se detectó voz en el audio';
+                    transcriptionStatus.className = 'transcription-status';
+                }
+            } catch (error) {
+                console.error('Error stopping streaming session:', error);
+                transcriptionStatus.textContent = 'Error al procesar: ' + error.message;
+                transcriptionStatus.className = 'transcription-status error';
+            } finally {
+                streamingSessionId = null;
+            }
+        }
+    }
+    
+    async function checkForSilence() {
+        if (!analyser || !streamingSessionId) return;
+        
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        
+        // If volume is above threshold, update last audio time
+        if (average > 10) { // Threshold for "sound detected"
+            lastAudioTime = Date.now();
+        }
+        
+        // Check if silence duration exceeds threshold
+        const silenceDuration = Date.now() - lastAudioTime;
+        if (silenceDuration >= silenceThreshold && mediaRecorder.state === 'recording') {
+            console.log('Silencio detectado por 1 segundo, deteniendo grabación...');
+            transcriptionStatus.textContent = 'Silencio detectado, finalizando...';
+            await stopRecording();
+        }
     }
 
     function updateRecordingTime() {

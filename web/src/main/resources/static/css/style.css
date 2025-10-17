@@ -523,3 +523,62 @@ header p {
         margin-top: 5px;
     }
 }
+
+/* Real-time transcription area */
+.realtime-transcription {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.realtime-transcription h3 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.realtime-transcription textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 1em;
+    color: #495057;
+    resize: vertical;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: white;
+    line-height: 1.6;
+}
+
+.realtime-transcription textarea:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.transcription-status {
+    margin-top: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.transcription-status.processing {
+    color: #4facfe;
+    font-weight: 600;
+}
+
+.transcription-status.completed {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.transcription-status.error {
+    color: #dc3545;
+    font-weight: 600;
+}
