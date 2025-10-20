@@ -64,6 +64,7 @@ public class AudioController {
             response.put("transcribedText", audioBean.getTranscribedText());
             response.put("audioSize", processedAudio.length);
             response.put("hasTranscription", audioBean.hasTranscribedText());
+            response.put("detectedLanguage", audioBean.getDetectedLanguage());
             
             // Add WAV metadata information
             response.put("samplesPerSecond", audioBean.getSamplesPerSecond());

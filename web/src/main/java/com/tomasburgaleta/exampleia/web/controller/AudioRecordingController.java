@@ -172,6 +172,7 @@ public class AudioRecordingController {
             response.put("aiResponse", audioBean.getAiResponse());
             response.put("hasTranscription", audioBean.hasTranscribedText());
             response.put("hasAiResponse", audioBean.hasAiResponse());
+            response.put("detectedLanguage", audioBean.getDetectedLanguage());
             response.put("audioSize", audioBean.getAudioData().length);
             response.put("samplesPerSecond", audioBean.getSamplesPerSecond());
             response.put("bitsPerSample", audioBean.getBitsPerSample());

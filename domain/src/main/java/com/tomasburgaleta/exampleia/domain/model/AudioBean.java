@@ -14,6 +14,7 @@ public class AudioBean {
     private long samplesPerSecond;
     private short bitsPerSample;
     private short channels;
+    private String detectedLanguage;
 
     
     public AudioBean(String id, byte[] audioData) {
@@ -75,6 +76,14 @@ public class AudioBean {
     
     public boolean hasAiResponse() {
         return aiResponse != null && !aiResponse.trim().isEmpty();
+    }
+    
+    public String getDetectedLanguage() {
+        return detectedLanguage;
+    }
+    
+    public void setDetectedLanguage(String detectedLanguage) {
+        this.detectedLanguage = detectedLanguage;
     }
     
     @Override

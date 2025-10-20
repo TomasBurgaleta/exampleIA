@@ -801,6 +801,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('audioSize').textContent = formatNumber(data.audioSize);
         document.getElementById('transcribedText').textContent = data.transcribedText || 'No se pudo obtener transcripción del audio.';
         
+        // Display detected language
+        document.getElementById('detectedLanguage').textContent = formatLanguage(data.detectedLanguage);
+        
         // Display AI response if available
         const aiResponseSection = document.getElementById('aiResponseSection');
         const aiResponseText = document.getElementById('aiResponseText');
@@ -890,5 +893,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatNumber(num) {
         return new Intl.NumberFormat('es-ES').format(num);
+    }
+    
+    function formatLanguage(languageCode) {
+        if (!languageCode) {
+            return 'Desconocido';
+        }
+        
+        const languageNames = {
+            'es-ES': 'Español (España)',
+            'es-MX': 'Español (México)',
+            'es-AR': 'Español (Argentina)',
+            'en-US': 'Inglés (Estados Unidos)',
+            'en-GB': 'Inglés (Reino Unido)',
+            'fr-FR': 'Francés (Francia)',
+            'de-DE': 'Alemán (Alemania)',
+            'it-IT': 'Italiano (Italia)',
+            'pt-PT': 'Portugués (Portugal)',
+            'pt-BR': 'Portugués (Brasil)'
+        };
+        
+        return languageNames[languageCode] || languageCode;
     }
 });
