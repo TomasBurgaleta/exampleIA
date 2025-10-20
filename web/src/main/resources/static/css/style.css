@@ -609,3 +609,69 @@ header p {
     color: #dc3545;
     font-weight: 600;
 }
+
+/* TTS Controls */
+.tts-controls {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.tts-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.tts-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+}
+
+.tts-btn:active {
+    transform: translateY(0);
+}
+
+.tts-status {
+    font-size: 0.9em;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 5px;
+    min-width: 150px;
+    text-align: left;
+}
+
+.tts-status.loading {
+    color: #4facfe;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.tts-status.playing {
+    color: #28a745;
+}
+
+.tts-status.completed {
+    color: #6c757d;
+}
+
+.tts-status.error {
+    color: #dc3545;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
