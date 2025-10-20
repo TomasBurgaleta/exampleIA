@@ -1,27 +1,39 @@
 
-# ExampleIA - Azure Audio Listening Service
+# ExampleIA - Azure Audio Listening Service with OpenAI Integration
 
 ## Descripción
 
-Este proyecto implementa un servicio de escucha de audio utilizando Azure Speech Services, siguiendo la arquitectura Clean Code/Hexagonal con Maven multi-módulo.
+Este proyecto implementa un servicio de escucha de audio utilizando Azure Speech Services y OpenAI, siguiendo la arquitectura Clean Code/Hexagonal con Maven multi-módulo.
 
 ## Arquitectura
 
 El proyecto está estructurado en 4 capas principales:
 
-- **domain**: Entidades de negocio y contratos (MIObject, AudioListenerPort)
-- **application**: Casos de uso y servicios de aplicación (AudioListenerService)
-- **infrastructure**: Adaptadores externos (Azure Speech Services)
+- **domain**: Entidades de negocio y contratos (AudioBean, AudioListenerPort, AiServicePort)
+- **application**: Casos de uso y servicios de aplicación (AudioListenerService, AudioRecordingService)
+- **infrastructure**: Adaptadores externos (Azure Speech Services, OpenAI)
 - **web**: Controladores REST y punto de entrada de la aplicación
 
 ## Funcionalidad Principal
 
-El servicio expone la interfaz `byte[] listenAudio(MIObject object)` que:
+### Transcripción de Audio
 
-1. Recibe un objeto MIObject que contiene audio en formato WAV como byte[]
+El servicio expone la interfaz `byte[] listenAudio(AudioBean object)` que:
+
+1. Recibe un objeto AudioBean que contiene audio en formato WAV como byte[]
 2. Utiliza Azure Speech Services para transcribir el audio
-3. Guarda el texto transcrito dentro del MIObject
+3. Guarda el texto transcrito dentro del AudioBean
 4. Retorna los datos de audio originales
+
+### Integración con OpenAI
+
+**NUEVO**: El sistema ahora integra OpenAI para proporcionar respuestas inteligentes basadas en el texto transcrito:
+
+1. Una vez transcrito el audio con Azure Speech Services
+2. El texto se envía automáticamente a OpenAI (gpt-3.5-turbo por defecto)
+3. La respuesta de la IA se muestra junto con la transcripción en la interfaz web
+
+Ver [OPENAI_INTEGRATION.md](OPENAI_INTEGRATION.md) para documentación completa sobre la integración con OpenAI.
 
 ### Detección de Silencio
 
@@ -41,6 +53,7 @@ Ver [SILENCE_DETECTION.md](SILENCE_DETECTION.md) para más detalles sobre esta f
 - Java 17 o superior
 - Maven 3.6 o superior
 - Suscripción a Azure Speech Services
+- API Key de OpenAI
 
 ### Variables de Entorno
 
@@ -48,14 +61,24 @@ Ver [SILENCE_DETECTION.md](SILENCE_DETECTION.md) para más detalles sobre esta f
 export AZURE_SPEECH_KEY=tu-clave-de-azure
 export AZURE_SPEECH_REGION=westeurope
 export AZURE_SPEECH_LANGUAGE=es-ES
+export OPENAI_API_KEY=tu-clave-de-openai
 ```
 
 ### Configuración en application.properties
 
 ```properties
+# Azure Speech Services
 azure.speech.subscription-key=${AZURE_SPEECH_KEY:your-subscription-key-here}
 azure.speech.region=${AZURE_SPEECH_REGION:westeurope}
 azure.speech.language=${AZURE_SPEECH_LANGUAGE:es-ES}
+
+# OpenAI Configuration
+openai.api-key=${OPENAI_API_KEY:your-openai-api-key-here}
+openai.model=${OPENAI_MODEL:gpt-3.5-turbo}
+openai.temperature=${OPENAI_TEMPERATURE:0.7}
+openai.max-tokens=${OPENAI_MAX_TOKENS:150}
+openai.log-requests=${OPENAI_LOG_REQUESTS:true}
+openai.log-responses=${OPENAI_LOG_RESPONSES:true}
 ```
 
 ## Compilación y Ejecución
@@ -102,6 +125,8 @@ curl -X POST \
 {
   "id": "uuid-del-objeto",
   "transcribedText": "Texto transcrito del audio",
+  "aiResponse": "Respuesta generada por OpenAI basada en el texto",
+  "hasAiResponse": true,
   "audioSize": 12345,
   "hasTranscription": true
 }
