@@ -169,7 +169,9 @@ public class AudioRecordingController {
             // Build response with transcription and metadata
             response.put("id", audioBean.getId());
             response.put("transcribedText", audioBean.getTranscribedText());
+            response.put("aiResponse", audioBean.getAiResponse());
             response.put("hasTranscription", audioBean.hasTranscribedText());
+            response.put("hasAiResponse", audioBean.hasAiResponse());
             response.put("audioSize", audioBean.getAudioData().length);
             response.put("samplesPerSecond", audioBean.getSamplesPerSecond());
             response.put("bitsPerSample", audioBean.getBitsPerSample());

@@ -801,6 +801,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('audioSize').textContent = formatNumber(data.audioSize);
         document.getElementById('transcribedText').textContent = data.transcribedText || 'No se pudo obtener transcripción del audio.';
         
+        // Display AI response if available
+        const aiResponseSection = document.getElementById('aiResponseSection');
+        const aiResponseText = document.getElementById('aiResponseText');
+        if (data.aiResponse && data.hasAiResponse) {
+            aiResponseText.textContent = data.aiResponse;
+            aiResponseSection.classList.remove('hidden');
+        } else {
+            aiResponseSection.classList.add('hidden');
+        }
+        
         // Display WAV metadata information
         document.getElementById('samplesPerSecond').textContent = formatNumber(data.samplesPerSecond);
         document.getElementById('bitsPerSample').textContent = data.bitsPerSample;

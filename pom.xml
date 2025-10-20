@@ -21,6 +21,7 @@
         <azure.cognitiveservices.speech.version>1.32.1</azure.cognitiveservices.speech.version>
         <spring.boot.version>3.1.0</spring.boot.version>
         <cucumber.version>7.14.0</cucumber.version>
+        <langchain4j.version>0.34.0</langchain4j.version>
     </properties>
 
     <modules>
@@ -54,6 +55,18 @@
                 <groupId>com.microsoft.cognitiveservices.speech</groupId>
                 <artifactId>client-sdk</artifactId>
                 <version>${azure.cognitiveservices.speech.version}</version>
+            </dependency>
+
+            <!-- LangChain4j for AI integration -->
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j</artifactId>
+                <version>${langchain4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-open-ai</artifactId>
+                <version>${langchain4j.version}</version>
             </dependency>
 
             <!-- Spring Boot -->

@@ -31,6 +31,16 @@
             <artifactId>client-sdk</artifactId>
         </dependency>
 
+        <!-- LangChain4j for AI integration -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+        </dependency>
+
         <!-- Spring Boot for configuration -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

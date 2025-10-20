@@ -6,6 +6,7 @@ import com.tomasburgaleta.exampleia.application.service.AudioRecordingService;
 import com.tomasburgaleta.exampleia.application.service.AudioStreamingService;
 import com.tomasburgaleta.exampleia.application.service.SilenceDetectionService;
 import com.tomasburgaleta.exampleia.application.service.WavByteProcessingService;
+import com.tomasburgaleta.exampleia.domain.port.AiServicePort;
 import com.tomasburgaleta.exampleia.domain.port.AudioFileReaderPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
@@ -43,8 +44,9 @@ public class ApplicationConfig {
     @Bean
     public AudioRecordingService audioRecordingService(AudioRecordingPort audioRecordingPort, 
                                                        AudioListenerPort audioListenerPort,
-                                                       SilenceDetectionService silenceDetectionService) {
-        return new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService);
+                                                       SilenceDetectionService silenceDetectionService,
+                                                       AiServicePort aiServicePort) {
+        return new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService, aiServicePort);
     }
     
     @Bean

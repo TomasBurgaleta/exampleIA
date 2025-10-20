@@ -1,6 +1,7 @@
 package com.tomasburgaleta.exampleia.application.service;
 
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AiServicePort;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
@@ -19,13 +20,16 @@ public class AudioRecordingService {
     private final AudioRecordingPort audioRecordingPort;
     private final AudioListenerPort audioListenerPort;
     private final SilenceDetectionService silenceDetectionService;
+    private final AiServicePort aiServicePort;
     
     public AudioRecordingService(AudioRecordingPort audioRecordingPort, 
                                 AudioListenerPort audioListenerPort,
-                                SilenceDetectionService silenceDetectionService) {
+                                SilenceDetectionService silenceDetectionService,
+                                AiServicePort aiServicePort) {
         this.audioRecordingPort = Objects.requireNonNull(audioRecordingPort, "AudioRecordingPort cannot be null");
         this.audioListenerPort = Objects.requireNonNull(audioListenerPort, "AudioListenerPort cannot be null");
         this.silenceDetectionService = silenceDetectionService;
+        this.aiServicePort = aiServicePort;
     }
     
     /**
@@ -157,6 +161,18 @@ public class AudioRecordingService {
         
         // Update the original audio bean with transcription
         audioBean.setTranscribedText(wavAudioBean.getTranscribedText());
+        
+        // Send transcribed text to AI and get response if transcription is not empty
+        if (aiServicePort != null && audioBean.hasTranscribedText()) {
+            try {
+                String aiResponse = aiServicePort.sendPrompt(audioBean.getTranscribedText());
+                audioBean.setAiResponse(aiResponse);
+            } catch (AudioProcessingException e) {
+                // Log but don't fail the transcription if AI fails
+                // The transcription result is still valid
+                throw new AudioProcessingException("Transcription successful but AI processing failed: " + e.getMessage(), e);
+            }
+        }
         
         return audioBean;
     }

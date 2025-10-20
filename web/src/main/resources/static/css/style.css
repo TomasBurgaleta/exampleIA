@@ -457,6 +457,33 @@ header p {
     min-height: 80px;
 }
 
+/* AI Response section */
+.ai-response-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+
+.ai-response-box strong {
+    display: block;
+    margin-bottom: 15px;
+    color: #495057;
+    font-size: 1.1em;
+}
+
+.ai-response-box p {
+    color: #212529;
+    font-size: 1.1em;
+    line-height: 1.6;
+    background: #e7f3ff;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #b3d9ff;
+    min-height: 80px;
+}
+
 /* Error section */
 .error {
     padding: 40px;
