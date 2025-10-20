@@ -5,6 +5,8 @@ import com.microsoft.cognitiveservices.speech.audio.AudioInputStream;
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
 import com.microsoft.cognitiveservices.speech.audio.AudioStreamFormat;
 import com.microsoft.cognitiveservices.speech.audio.PushAudioInputStream;
+import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig;
+import com.microsoft.cognitiveservices.speech.PropertyId;
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
@@ -41,15 +43,29 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
         }
         
         try {
-            String transcribedText = transcribeAudio(audioData, audioBean.getSamplesPerSecond(), audioBean.getBitsPerSample(), audioBean.getChannels());
-            audioBean.setTranscribedText(transcribedText);
+            TranscriptionResult result = transcribeAudio(audioData, audioBean.getSamplesPerSecond(), audioBean.getBitsPerSample(), audioBean.getChannels());
+            audioBean.setTranscribedText(result.text);
+            audioBean.setDetectedLanguage(result.language);
             return audioData;
         } catch (Exception e) {
             throw new AudioProcessingException("Failed to transcribe audio: " + e.getMessage(), e);
         }
     }
     
-    private String transcribeAudio(byte[] audioData, long samplesPerSecond, short bitsPerSample, short channels) throws AudioProcessingException {
+    /**
+     * Inner class to hold transcription result with language information
+     */
+    private static class TranscriptionResult {
+        final String text;
+        final String language;
+        
+        TranscriptionResult(String text, String language) {
+            this.text = text;
+            this.language = language;
+        }
+    }
+    
+    private TranscriptionResult transcribeAudio(byte[] audioData, long samplesPerSecond, short bitsPerSample, short channels) throws AudioProcessingException {
         // Validate audio metadata
         if (samplesPerSecond <= 0) {
             throw new AudioProcessingException("Invalid samples per second: " + samplesPerSecond);
@@ -62,15 +78,21 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
         }
         
         try (SpeechConfig speechConfig = SpeechConfig.fromSubscription(azureConfig.getSubscriptionKey(), azureConfig.getRegion())) {
-            // Configure Azure Speech Services
+            // Configure Azure Speech Services with language auto-detection
+            // Set Spanish (Spain) as default language
             speechConfig.setSpeechRecognitionLanguage(azureConfig.getLanguage());
+            
+            // Create auto-detect source language config with Spanish as default and other Spanish variants
+            AutoDetectSourceLanguageConfig autoDetectConfig = AutoDetectSourceLanguageConfig.fromLanguages(
+                java.util.Arrays.asList("es-ES", "es-MX", "es-AR", "en-US", "en-GB", "fr-FR", "de-DE", "it-IT", "pt-PT", "pt-BR")
+            );
             
             // Create audio input stream from byte array using AudioBean metadata
             AudioStreamFormat format = AudioStreamFormat.getWaveFormatPCM(samplesPerSecond, bitsPerSample, channels);
             try (PushAudioInputStream pushStream = AudioInputStream.createPushStream(format)) {
                 AudioConfig audioConfig = AudioConfig.fromStreamInput(pushStream);
-                // Create speech recognizer
-                try (SpeechRecognizer recognizer = new SpeechRecognizer(speechConfig, audioConfig)) {
+                // Create speech recognizer with auto-detection
+                try (SpeechRecognizer recognizer = new SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)) {
                     // Write audio data to the stream
                     pushStream.write(audioData);
                     pushStream.close();
@@ -79,9 +101,18 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
                     SpeechRecognitionResult result = recognizer.recognizeOnceAsync().get();
 
                     if (result.getReason() == ResultReason.RecognizedSpeech) {
-                        return result.getText();
+                        // Extract detected language from result properties
+                        String detectedLanguage = result.getProperties().getProperty(PropertyId.SpeechServiceConnection_AutoDetectSourceLanguageResult);
+                        
+                        // If auto-detection didn't work or returned null, use the default configured language
+                        if (detectedLanguage == null || detectedLanguage.isEmpty()) {
+                            detectedLanguage = azureConfig.getLanguage();
+                        }
+                        
+                        return new TranscriptionResult(result.getText(), detectedLanguage);
                     } else if (result.getReason() == ResultReason.NoMatch) {
-                        return ""; // No speech found
+                        // No speech found, return empty with default language
+                        return new TranscriptionResult("", azureConfig.getLanguage());
                     } else {
                         throw new AudioProcessingException("Speech recognition failed: " + result.getReason());
                     }
