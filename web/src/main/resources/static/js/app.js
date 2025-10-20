@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const error = document.getElementById('error');
     const newTranscriptionBtn = document.getElementById('newTranscription');
     const retryBtn = document.getElementById('retryBtn');
+    
+    // TTS elements
+    const playTtsBtn = document.getElementById('playTtsBtn');
+    const ttsStatus = document.getElementById('ttsStatus');
+    let currentAiResponse = null;
+    let currentAudio = null;
 
     // Audio recording elements
     const recordBtn = document.getElementById('recordBtn');
@@ -810,8 +816,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.aiResponse && data.hasAiResponse) {
             aiResponseText.textContent = data.aiResponse;
             aiResponseSection.classList.remove('hidden');
+            
+            // Store AI response for TTS
+            currentAiResponse = data.aiResponse;
+            
+            // Automatically play TTS audio for AI response
+            playTextToSpeech(data.aiResponse);
         } else {
             aiResponseSection.classList.add('hidden');
+            currentAiResponse = null;
         }
         
         // Display WAV metadata information
@@ -820,6 +833,100 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('channels').textContent = data.channels === 1 ? '1 (Mono)' : data.channels === 2 ? '2 (Estéreo)' : data.channels;
         
         result.classList.remove('hidden');
+    }
+    
+    // TTS button click handler
+    if (playTtsBtn) {
+        playTtsBtn.addEventListener('click', function() {
+            if (currentAiResponse) {
+                playTextToSpeech(currentAiResponse);
+            }
+        });
+    }
+    
+    // Text-to-Speech function
+    async function playTextToSpeech(text) {
+        if (!text || text.trim() === '') {
+            console.log('No text provided for TTS');
+            return;
+        }
+        
+        try {
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            // Update status
+            if (ttsStatus) {
+                ttsStatus.textContent = '⏳ Generando audio...';
+                ttsStatus.className = 'tts-status loading';
+            }
+            
+            console.log('Requesting TTS for text:', text.substring(0, 50) + '...');
+            
+            const response = await fetch('/api/tts/synthesize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('TTS error:', errorData.error);
+                if (ttsStatus) {
+                    ttsStatus.textContent = '❌ Error al generar audio';
+                    ttsStatus.className = 'tts-status error';
+                }
+                return;
+            }
+            
+            // Get the audio blob
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            // Create and play audio element
+            currentAudio = new Audio(audioUrl);
+            
+            currentAudio.addEventListener('play', function() {
+                if (ttsStatus) {
+                    ttsStatus.textContent = '🔊 Reproduciendo...';
+                    ttsStatus.className = 'tts-status playing';
+                }
+            });
+            
+            currentAudio.addEventListener('ended', function() {
+                if (ttsStatus) {
+                    ttsStatus.textContent = '✅ Audio completado';
+                    ttsStatus.className = 'tts-status completed';
+                }
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+            });
+            
+            currentAudio.addEventListener('error', function(e) {
+                console.error('Audio playback error:', e);
+                if (ttsStatus) {
+                    ttsStatus.textContent = '❌ Error al reproducir';
+                    ttsStatus.className = 'tts-status error';
+                }
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+            });
+            
+            currentAudio.play();
+            console.log('Playing TTS audio');
+            
+        } catch (error) {
+            console.error('Error playing TTS:', error);
+            if (ttsStatus) {
+                ttsStatus.textContent = '❌ Error: ' + error.message;
+                ttsStatus.className = 'tts-status error';
+            }
+        }
     }
 
     function showError(message) {

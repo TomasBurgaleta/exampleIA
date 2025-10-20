@@ -5,12 +5,14 @@ import com.tomasburgaleta.exampleia.application.service.AudioListenerService;
 import com.tomasburgaleta.exampleia.application.service.AudioRecordingService;
 import com.tomasburgaleta.exampleia.application.service.AudioStreamingService;
 import com.tomasburgaleta.exampleia.application.service.SilenceDetectionService;
+import com.tomasburgaleta.exampleia.application.service.TextToSpeechService;
 import com.tomasburgaleta.exampleia.application.service.WavByteProcessingService;
 import com.tomasburgaleta.exampleia.domain.port.AiServicePort;
 import com.tomasburgaleta.exampleia.domain.port.AudioFileReaderPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
 import com.tomasburgaleta.exampleia.domain.port.SilenceDetectorPort;
+import com.tomasburgaleta.exampleia.domain.port.TextToSpeechPort;
 import com.tomasburgaleta.exampleia.domain.port.WavByteReaderPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,5 +54,10 @@ public class ApplicationConfig {
     @Bean
     public AudioStreamingService audioStreamingService() {
         return new AudioStreamingService();
+    }
+    
+    @Bean
+    public TextToSpeechService textToSpeechService(TextToSpeechPort textToSpeechPort) {
+        return new TextToSpeechService(textToSpeechPort);
     }
 }
