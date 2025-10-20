@@ -9,6 +9,7 @@ public class AudioBean {
 
     private final byte[] audioData;
     private String transcribedText;
+    private String aiResponse;
     private final String id;
     private long samplesPerSecond;
     private short bitsPerSample;
@@ -62,6 +63,18 @@ public class AudioBean {
     
     public boolean hasTranscribedText() {
         return transcribedText != null && !transcribedText.trim().isEmpty();
+    }
+    
+    public String getAiResponse() {
+        return aiResponse;
+    }
+    
+    public void setAiResponse(String aiResponse) {
+        this.aiResponse = aiResponse;
+    }
+    
+    public boolean hasAiResponse() {
+        return aiResponse != null && !aiResponse.trim().isEmpty();
     }
     
     @Override

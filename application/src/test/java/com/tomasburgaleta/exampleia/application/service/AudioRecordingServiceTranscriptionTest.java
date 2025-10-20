@@ -1,6 +1,7 @@
 package com.tomasburgaleta.exampleia.application.service;
 
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
+import com.tomasburgaleta.exampleia.domain.port.AiServicePort;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import com.tomasburgaleta.exampleia.domain.port.AudioRecordingPort;
@@ -27,11 +28,14 @@ class AudioRecordingServiceTranscriptionTest {
     @Mock
     private SilenceDetectionService silenceDetectionService;
     
+    @Mock
+    private AiServicePort aiServicePort;
+    
     private AudioRecordingService audioRecordingService;
     
     @BeforeEach
     void setUp() {
-        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService);
+        audioRecordingService = new AudioRecordingService(audioRecordingPort, audioListenerPort, silenceDetectionService, aiServicePort);
     }
     
     @Test
@@ -53,6 +57,8 @@ class AudioRecordingServiceTranscriptionTest {
             return bean.getAudioData();
         }).when(audioListenerPort).listenAudio(any(AudioBean.class));
         
+        when(aiServicePort.sendPrompt("Test transcription")).thenReturn("AI Response");
+        
         // Act
         AudioBean result = audioRecordingService.transcribeRecording(recordingId);
         
@@ -60,12 +66,14 @@ class AudioRecordingServiceTranscriptionTest {
         assertNotNull(result);
         assertEquals(recordingId, result.getId());
         assertEquals("Test transcription", result.getTranscribedText());
+        assertEquals("AI Response", result.getAiResponse());
         assertEquals(44100L, result.getSamplesPerSecond());
         assertEquals((short) 16, result.getBitsPerSample());
         assertEquals((short) 2, result.getChannels());
         
         verify(audioRecordingPort, times(1)).getRecording(recordingId);
         verify(audioListenerPort, times(1)).listenAudio(any(AudioBean.class));
+        verify(aiServicePort, times(1)).sendPrompt("Test transcription");
     }
     
     @Test
