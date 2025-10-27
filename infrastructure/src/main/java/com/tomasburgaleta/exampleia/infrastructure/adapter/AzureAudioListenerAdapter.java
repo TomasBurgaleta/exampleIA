@@ -9,6 +9,7 @@ import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig;
 import com.microsoft.cognitiveservices.speech.PropertyId;
 import com.tomasburgaleta.exampleia.domain.model.AudioBean;
 import com.tomasburgaleta.exampleia.domain.port.AudioListenerPort;
+import com.tomasburgaleta.exampleia.domain.port.SpeechToTextPort;
 import com.tomasburgaleta.exampleia.domain.port.AudioProcessingException;
 import com.tomasburgaleta.exampleia.infrastructure.config.AzureSpeechConfig;
 import org.springframework.stereotype.Component;
@@ -17,11 +18,11 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Azure implementation of the AudioListenerPort
+ * Azure implementation of the SpeechToTextPort and AudioListenerPort
  * This adapter integrates with Azure Speech Services to transcribe audio
  */
 @Component
-public class AzureAudioListenerAdapter implements AudioListenerPort {
+public class AzureAudioListenerAdapter implements SpeechToTextPort, AudioListenerPort {
     
     private final AzureSpeechConfig azureConfig;
     
@@ -31,6 +32,11 @@ public class AzureAudioListenerAdapter implements AudioListenerPort {
     
     @Override
     public byte[] listenAudio(AudioBean audioBean) throws AudioProcessingException {
+        return transcribe(audioBean);
+    }
+    
+    @Override
+    public byte[] transcribe(AudioBean audioBean) throws AudioProcessingException {
         Objects.requireNonNull(audioBean, "MIObject cannot be null");
         
         if (!azureConfig.isValid()) {
