@@ -1,29 +1,36 @@
 
-# ExampleIA - Azure Audio Listening Service with OpenAI Integration
+# ExampleIA - Multi-Provider Speech-to-Text Service with OpenAI Integration
 
 ## Descripción
 
-Este proyecto implementa un servicio de escucha de audio utilizando Azure Speech Services y OpenAI, siguiendo la arquitectura Clean Code/Hexagonal con Maven multi-módulo.
+Este proyecto implementa un servicio de escucha de audio con soporte para **múltiples proveedores de speech-to-text** (Azure Speech Services y Deepgram) y OpenAI, siguiendo la arquitectura Clean Code/Hexagonal con Maven multi-módulo.
 
 ## Arquitectura
 
 El proyecto está estructurado en 4 capas principales:
 
-- **domain**: Entidades de negocio y contratos (AudioBean, AudioListenerPort, AiServicePort)
+- **domain**: Entidades de negocio y contratos (AudioBean, SpeechToTextPort, AudioListenerPort, AiServicePort)
 - **application**: Casos de uso y servicios de aplicación (AudioListenerService, AudioRecordingService)
-- **infrastructure**: Adaptadores externos (Azure Speech Services, OpenAI)
+- **infrastructure**: Adaptadores externos (Azure Speech Services, Deepgram, OpenAI)
 - **web**: Controladores REST y punto de entrada de la aplicación
 
 ## Funcionalidad Principal
 
-### Transcripción de Audio
+### Transcripción de Audio - Multi-Proveedor
 
-El servicio expone la interfaz `byte[] listenAudio(AudioBean object)` que:
+**NUEVO**: El sistema ahora soporta múltiples proveedores de speech-to-text:
+- **Azure Speech Services** (proveedor por defecto)
+- **Deepgram** (alternativa mediante REST API)
+
+El servicio expone la interfaz común `SpeechToTextPort` que:
 
 1. Recibe un objeto AudioBean que contiene audio en formato WAV como byte[]
-2. Utiliza Azure Speech Services para transcribir el audio
+2. Utiliza el proveedor configurado (Azure o Deepgram) para transcribir el audio
 3. Guarda el texto transcrito dentro del AudioBean
-4. Retorna los datos de audio originales
+4. Detecta automáticamente el idioma del audio
+5. Retorna los datos de audio originales
+
+Ver [DEEPGRAM_INTEGRATION.md](DEEPGRAM_INTEGRATION.md) para documentación completa sobre la integración multi-proveedor.
 
 ### Integración con OpenAI
 
@@ -52,11 +59,13 @@ Ver [SILENCE_DETECTION.md](SILENCE_DETECTION.md) para más detalles sobre esta f
 
 - Java 17 o superior
 - Maven 3.6 o superior
-- Suscripción a Azure Speech Services
+- Suscripción a Azure Speech Services (si usa Azure como proveedor)
+- API Key de Deepgram (si usa Deepgram como proveedor)
 - API Key de OpenAI
 
 ### Variables de Entorno
 
+#### Para Azure (proveedor por defecto)
 ```bash
 export AZURE_SPEECH_KEY=tu-clave-de-azure
 export AZURE_SPEECH_REGION=westeurope
@@ -64,13 +73,30 @@ export AZURE_SPEECH_LANGUAGE=es-ES
 export OPENAI_API_KEY=tu-clave-de-openai
 ```
 
+#### Para Deepgram
+```bash
+export SPEECH_PROVIDER=deepgram
+export DEEPGRAM_API_KEY=tu-clave-de-deepgram
+export DEEPGRAM_MODEL=nova-2
+export DEEPGRAM_LANGUAGE=es
+export OPENAI_API_KEY=tu-clave-de-openai
+```
+
 ### Configuración en application.properties
 
 ```properties
+# Speech-to-Text Provider Selection (azure or deepgram)
+speech.provider=${SPEECH_PROVIDER:azure}
+
 # Azure Speech Services
 azure.speech.subscription-key=${AZURE_SPEECH_KEY:your-subscription-key-here}
 azure.speech.region=${AZURE_SPEECH_REGION:westeurope}
 azure.speech.language=${AZURE_SPEECH_LANGUAGE:es-ES}
+
+# Deepgram Speech Services
+deepgram.speech.api-key=${DEEPGRAM_API_KEY:your-deepgram-api-key-here}
+deepgram.speech.model=${DEEPGRAM_MODEL:nova-2}
+deepgram.speech.language=${DEEPGRAM_LANGUAGE:es}
 
 # OpenAI Configuration
 openai.api-key=${OPENAI_API_KEY:your-openai-api-key-here}
