@@ -47,8 +47,12 @@ public class InfrastructureConfig {
     
     @Bean
     public AudioListenerPort audioListenerPort(SpeechToTextPort speechToTextPort) {
-        // AudioListenerPort is now delegated to SpeechToTextPort
-        return (AudioListenerPort) speechToTextPort;
+        // Both Azure and Deepgram adapters implement both SpeechToTextPort and AudioListenerPort
+        // This is safe because we control the creation of speechToTextPort in this configuration class
+        if (speechToTextPort instanceof AudioListenerPort) {
+            return (AudioListenerPort) speechToTextPort;
+        }
+        throw new IllegalStateException("SpeechToTextPort implementation must also implement AudioListenerPort");
     }
     
     @Bean

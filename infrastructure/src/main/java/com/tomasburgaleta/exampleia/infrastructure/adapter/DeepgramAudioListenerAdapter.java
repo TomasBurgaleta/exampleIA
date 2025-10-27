@@ -129,7 +129,6 @@ public class DeepgramAudioListenerAdapter implements SpeechToTextPort, AudioList
         return urlBuilder.toString();
     }
     
-    @SuppressWarnings("unchecked")
     private TranscriptionResult parseTranscriptionResponse(Map<String, Object> responseBody) throws AudioProcessingException {
         if (responseBody == null) {
             throw new AudioProcessingException("Deepgram response is null");
@@ -137,17 +136,20 @@ public class DeepgramAudioListenerAdapter implements SpeechToTextPort, AudioList
         
         try {
             // Navigate through the Deepgram response structure
+            @SuppressWarnings("unchecked")
             Map<String, Object> results = (Map<String, Object>) responseBody.get("results");
             if (results == null) {
                 return new TranscriptionResult("", deepgramConfig.getLanguage());
             }
             
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> channels = (List<Map<String, Object>>) results.get("channels");
             if (channels == null || channels.isEmpty()) {
                 return new TranscriptionResult("", deepgramConfig.getLanguage());
             }
             
             Map<String, Object> channel = channels.get(0);
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> alternatives = (List<Map<String, Object>>) channel.get("alternatives");
             if (alternatives == null || alternatives.isEmpty()) {
                 return new TranscriptionResult("", deepgramConfig.getLanguage());
